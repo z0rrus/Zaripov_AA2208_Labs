@@ -137,9 +137,11 @@ int main() {
         cout << "6. Save" << endl;
         cout << "7. Load" << endl;
         cout << "0. Exit" << endl;
+        cout << "" << endl;
 
         int choice;
         cin >> choice;
+        cout << "" << endl;
 
         switch (choice) {
         case 1: {
