@@ -140,7 +140,12 @@ int main() {
         cout << "" << endl;
 
         int choice;
-        cin >> choice;
+        if (!(cin >> choice)) {
+            cout << "Invalid choice. Please try again." << endl;
+            cin.clear(); // Clear error flags
+            cin.ignore(numeric_limits<streamsize>::max(), '\n'); // Clear input buffer
+            continue; // Skip the rest of the loop
+        }
         cout << "" << endl;
 
         switch (choice) {
@@ -178,7 +183,12 @@ int main() {
                 if (pipe.name == pipeName) {
                     cout << "Choose action: 1. Under repair 2. Operational" << endl;
                     int repairChoice;
-                    cin >> repairChoice;
+                    if (!(cin >> repairChoice)) {
+                        cout << "Invalid action choice. Please try again." << endl;
+                        cin.clear(); // Clear error flags
+                        cin.ignore(numeric_limits<streamsize>::max(), '\n'); // Clear input buffer
+                        break; // Exit the loop
+                    }
                     if (repairChoice == 1) {
                         pipe.inRepair = true;
                         cout << "Status changed to 'Under repair'" << endl;
