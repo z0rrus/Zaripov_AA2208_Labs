@@ -41,10 +41,10 @@ class CompressorStation {
 public:
     string name;
     int workshopCount;
-    int activeWorkshops;
+    vector<bool> workshopStatus; // Vector to store the operational status of workshops
     double efficiency;
 
-    CompressorStation() : name(""), workshopCount(0), activeWorkshops(0), efficiency(0.0) {}
+    CompressorStation() : name(""), workshopCount(0), efficiency(0.0) {}
 
     void readData() {
         cin.ignore(numeric_limits<streamsize>::max(), '\n');
@@ -52,8 +52,10 @@ public:
         getline(cin, name);
         cout << "Enter workshop count: ";
         cin >> workshopCount;
-        cout << "Enter active workshops count: ";
-        cin >> activeWorkshops;
+
+        // Initialize the workshopStatus vector with default values (all operational)
+        workshopStatus.resize(workshopCount, true);
+
         cout << "Enter efficiency rating: ";
         cin >> efficiency;
     }
@@ -61,7 +63,13 @@ public:
     void displayData() const {
         cout << "Station Name: " << name << endl;
         cout << "Workshop Count: " << workshopCount << endl;
-        cout << "Active Workshops: " << activeWorkshops << endl;
+
+        // Display the operational status of each workshop
+        cout << "Workshop Status:" << endl;
+        for (int i = 0; i < workshopCount; i++) {
+            cout << "Workshop " << i + 1 << ": " << (workshopStatus[i] ? "Operational" : "Not Operational") << endl;
+        }
+
         cout << "Efficiency Rating: " << efficiency << endl;
     }
 };
@@ -80,7 +88,11 @@ void saveData(const vector<Pipe>& pipes, const vector<CompressorStation>& statio
             file << "Station\n";
             file << station.name << "\n";
             file << station.workshopCount << "\n";
-            file << station.activeWorkshops << "\n";
+
+            for (bool status : station.workshopStatus) {
+                file << status << "\n"; // Сохраняем статус каждого цеха
+            }
+
             file << station.efficiency << "\n";
         }
         file.close();
@@ -110,7 +122,12 @@ void loadData(vector<Pipe>& pipes, vector<CompressorStation>& stations, const st
                 CompressorStation station;
                 getline(file, station.name);
                 file >> station.workshopCount;
-                file >> station.activeWorkshops;
+                station.workshopStatus.resize(station.workshopCount);
+                for (int i = 0; i < station.workshopCount; i++) {
+                    int status;
+                    file >> status; // Загружаем статус каждого цеха
+                    station.workshopStatus[i] = (status != 0); // Преобразуем int в bool
+                }
                 file >> station.efficiency;
                 stations.push_back(station);
             }
@@ -122,6 +139,7 @@ void loadData(vector<Pipe>& pipes, vector<CompressorStation>& stations, const st
         cout << "Error opening the file for loading." << endl;
     }
 }
+
 
 int main() {
     vector<Pipe> pipes;
@@ -212,8 +230,17 @@ int main() {
             getline(cin, stationName);
             for (CompressorStation& station : stations) {
                 if (station.name == stationName) {
-                    station.readData();
-                    cout << "Compressor Station data updated successfully." << endl;
+                    cout << "Choose workshop to edit (1-" << station.workshopCount << "): ";
+                    int workshopChoice;
+                    if (!(cin >> workshopChoice) || workshopChoice < 1 || workshopChoice > station.workshopCount) {
+                        cout << "Invalid workshop choice. Please try again." << endl;
+                        cin.clear();
+                        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                        break;
+                    }
+                    // Toggle the status of the selected workshop
+                    station.workshopStatus[workshopChoice - 1] = !station.workshopStatus[workshopChoice - 1];
+                    cout << "Workshop " << workshopChoice << " status changed to '" << (station.workshopStatus[workshopChoice - 1] ? "Operational" : "Not Operational") << "'" << endl;
                     break;
                 }
             }
