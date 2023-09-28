@@ -75,7 +75,7 @@ public:
 };
 
 void saveData(const vector<Pipe>& pipes, const vector<CompressorStation>& stations, const string& filename) {
-    ofstream file(filename);
+    ofstream file(filename, ios::app); // Открываем файл в режиме дозаписи (ios::app)
     if (file.is_open()) {
         for (const Pipe& pipe : pipes) {
             file << "Pipe\n";
@@ -181,24 +181,28 @@ int main() {
         }
         case 3: {
             cout << "Pipes:" << endl;
+            cout << "" << endl;
             for (const Pipe& pipe : pipes) {
                 pipe.displayData();
                 cout << endl;
             }
             cout << "Compressor Stations:" << endl;
+            cout << "" << endl;
             for (const CompressorStation& station : stations) {
                 station.displayData();
                 cout << endl;
             }
             break;
         }
-        case 4: {
+        case 4: { // Редактирование трубы
             cin.ignore(numeric_limits<streamsize>::max(), '\n');
             cout << "Enter the name of the pipe to edit: ";
             string pipeName;
             getline(cin, pipeName);
+            bool found = false; // Флаг для отслеживания, была ли найдена труба
             for (Pipe& pipe : pipes) {
                 if (pipe.name == pipeName) {
+                    found = true;
                     cout << "Choose action: 1. Under repair 2. Operational" << endl;
                     int repairChoice;
                     if (!(cin >> repairChoice)) {
@@ -221,15 +225,20 @@ int main() {
                     break;
                 }
             }
+            if (!found) {
+                cout << "Pipe with the name '" << pipeName << "' not found." << endl;
+            }
             break;
         }
-        case 5: {
+        case 5: { // Редактирование станции
             cin.ignore(numeric_limits<streamsize>::max(), '\n');
             cout << "Enter the name of the compressor station to edit: ";
             string stationName;
             getline(cin, stationName);
+            bool found = false; // Флаг для отслеживания, была ли найдена станция
             for (CompressorStation& station : stations) {
                 if (station.name == stationName) {
+                    found = true;
                     cout << "Choose workshop to edit (1-" << station.workshopCount << "): ";
                     int workshopChoice;
                     if (!(cin >> workshopChoice) || workshopChoice < 1 || workshopChoice > station.workshopCount) {
@@ -244,8 +253,12 @@ int main() {
                     break;
                 }
             }
+            if (!found) {
+                cout << "Compressor station with the name '" << stationName << "' not found." << endl;
+            }
             break;
         }
+
         case 6: {
             saveData(pipes, stations, "data.txt");
             break;
