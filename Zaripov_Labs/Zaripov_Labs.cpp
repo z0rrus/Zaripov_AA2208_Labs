@@ -19,10 +19,30 @@ public:
         cin.ignore(numeric_limits<streamsize>::max(), '\n');
         cout << "Enter pipe name: ";
         getline(cin, name);
-        cout << "Enter pipe length (km): ";
-        cin >> length;
-        cout << "Enter pipe diameter (cm): ";
-        cin >> diameter;
+
+        while (true) {
+            cout << "Enter pipe length (km): ";
+            if (cin >> length && length >= 0) {
+                break;
+            }
+            else {
+                cout << "Invalid input. Please enter a non-negative number for length." << endl;
+                cin.clear(); // Очищаем флаги ошибок
+                cin.ignore(numeric_limits<streamsize>::max(), '\n'); // Очищаем буфер ввода
+            }
+        }
+
+        while (true) {
+            cout << "Enter pipe diameter (cm): ";
+            if (cin >> diameter && diameter >= 0) {
+                break;
+            }
+            else {
+                cout << "Invalid input. Please enter a non-negative number for diameter." << endl;
+                cin.clear(); // Очищаем флаги ошибок
+                cin.ignore(numeric_limits<streamsize>::max(), '\n'); // Очищаем буфер ввода
+            }
+        }
     }
 
     void displayData() const {
@@ -41,7 +61,7 @@ class CompressorStation {
 public:
     string name;
     int workshopCount;
-    vector<bool> workshopStatus; // Vector to store the operational status of workshops
+    vector<bool> workshopStatus; 
     double efficiency;
 
     CompressorStation() : name(""), workshopCount(0), efficiency(0.0) {}
@@ -50,26 +70,43 @@ public:
         cin.ignore(numeric_limits<streamsize>::max(), '\n');
         cout << "Enter station name: ";
         getline(cin, name);
-        cout << "Enter workshop count: ";
-        cin >> workshopCount;
 
-        // Initialize the workshopStatus vector with default values (all operational)
+        while (true) {
+            cout << "Enter workshop count: ";
+            if (cin >> workshopCount && workshopCount >= 0) {
+                break;
+            }
+            else {
+                cout << "Invalid input. Please enter a non-negative integer for workshop count." << endl;
+                cin.clear(); // Очищаем флаги ошибок
+                cin.ignore(numeric_limits<streamsize>::max(), '\n'); // Очищаем буфер ввода
+            }
+        }
+
+        while (true) {
+            cout << "Enter efficiency rating: ";
+            if (cin >> efficiency && efficiency >= 0) {
+                break;
+            }
+            else {
+                cout << "Invalid input. Please enter a non-negative number for efficiency rating." << endl;
+                cin.clear(); // Очищаем флаги ошибок
+                cin.ignore(numeric_limits<streamsize>::max(), '\n'); // Очищаем буфер ввода
+            }
+        }
+
+        // Инициализируем workshopStatus в зависимости от workshopCount
         workshopStatus.resize(workshopCount, true);
-
-        cout << "Enter efficiency rating: ";
-        cin >> efficiency;
     }
+
 
     void displayData() const {
         cout << "Station Name: " << name << endl;
         cout << "Workshop Count: " << workshopCount << endl;
-
-        // Display the operational status of each workshop
         cout << "Workshop Status:" << endl;
         for (int i = 0; i < workshopCount; i++) {
             cout << "Workshop " << i + 1 << ": " << (workshopStatus[i] ? "Operational" : "Not Operational") << endl;
         }
-
         cout << "Efficiency Rating: " << efficiency << endl;
     }
 };
@@ -88,11 +125,9 @@ void saveData(const vector<Pipe>& pipes, const vector<CompressorStation>& statio
             file << "Station\n";
             file << station.name << "\n";
             file << station.workshopCount << "\n";
-
             for (bool status : station.workshopStatus) {
-                file << status << "\n"; // Сохраняем статус каждого цеха
+                file << status << "\n";
             }
-
             file << station.efficiency << "\n";
         }
         file.close();
@@ -125,7 +160,7 @@ void loadData(vector<Pipe>& pipes, vector<CompressorStation>& stations, const st
                 station.workshopStatus.resize(station.workshopCount);
                 for (int i = 0; i < station.workshopCount; i++) {
                     int status;
-                    file >> status; // Загружаем статус каждого цеха
+                    file >> status; 
                     station.workshopStatus[i] = (status != 0); // Преобразуем int в bool
                 }
                 file >> station.efficiency;
@@ -146,12 +181,13 @@ int main() {
     vector<CompressorStation> stations;
 
     while (true) {
+        cout << "" << endl;
         cout << "Menu:" << endl;
         cout << "1. Add a pipe" << endl;
         cout << "2. Add a compressor station" << endl;
         cout << "3. View all objects" << endl;
-        cout << "4. Edit a pipe" << endl;
-        cout << "5. Edit a compressor station" << endl;
+        cout << "4. Editing the operation status of pipes" << endl;
+        cout << "5. Starting and stopping workshops" << endl;
         cout << "6. Save" << endl;
         cout << "7. Load" << endl;
         cout << "0. Exit" << endl;
@@ -160,9 +196,9 @@ int main() {
         int choice;
         if (!(cin >> choice)) {
             cout << "Invalid choice. Please try again." << endl;
-            cin.clear(); // Clear error flags
-            cin.ignore(numeric_limits<streamsize>::max(), '\n'); // Clear input buffer
-            continue; // Skip the rest of the loop
+            cin.clear(); // Очищаем флаги ошибок
+            cin.ignore(numeric_limits<streamsize>::max(), '\n'); // Очищаем буфер ввода
+            continue; 
         }
         cout << "" << endl;
 
@@ -194,12 +230,12 @@ int main() {
             }
             break;
         }
-        case 4: { // Редактирование трубы
+        case 4: { 
             cin.ignore(numeric_limits<streamsize>::max(), '\n');
             cout << "Enter the name of the pipe to edit: ";
             string pipeName;
             getline(cin, pipeName);
-            bool found = false; // Флаг для отслеживания, была ли найдена труба
+            bool found = false; 
             for (Pipe& pipe : pipes) {
                 if (pipe.name == pipeName) {
                     found = true;
@@ -207,9 +243,9 @@ int main() {
                     int repairChoice;
                     if (!(cin >> repairChoice)) {
                         cout << "Invalid action choice. Please try again." << endl;
-                        cin.clear(); // Clear error flags
-                        cin.ignore(numeric_limits<streamsize>::max(), '\n'); // Clear input buffer
-                        break; // Exit the loop
+                        cin.clear(); 
+                        cin.ignore(numeric_limits<streamsize>::max(), '\n'); 
+                        break; 
                     }
                     if (repairChoice == 1) {
                         pipe.inRepair = true;
@@ -230,12 +266,12 @@ int main() {
             }
             break;
         }
-        case 5: { // Редактирование станции
+        case 5: { 
             cin.ignore(numeric_limits<streamsize>::max(), '\n');
             cout << "Enter the name of the compressor station to edit: ";
             string stationName;
             getline(cin, stationName);
-            bool found = false; // Флаг для отслеживания, была ли найдена станция
+            bool found = false; 
             for (CompressorStation& station : stations) {
                 if (station.name == stationName) {
                     found = true;
@@ -247,7 +283,6 @@ int main() {
                         cin.ignore(numeric_limits<streamsize>::max(), '\n');
                         break;
                     }
-                    // Toggle the status of the selected workshop
                     station.workshopStatus[workshopChoice - 1] = !station.workshopStatus[workshopChoice - 1];
                     cout << "Workshop " << workshopChoice << " status changed to '" << (station.workshopStatus[workshopChoice - 1] ? "Operational" : "Not Operational") << "'" << endl;
                     break;
