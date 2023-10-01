@@ -5,6 +5,7 @@
 #include <limits>
 
 using namespace std;
+bool flag = false;
 
 
 void clearInput() {
@@ -176,7 +177,14 @@ void editWorkshopStatus(vector<CompressorStation>& stations) {
 }
 
 void saveData(const vector<Pipe>& pipes, const vector<CompressorStation>& stations, const string& filename) {
-    ofstream file(filename, ios::app);
+    ofstream file;
+    if (flag) {
+        file.open(filename);
+    }
+    else {
+        file.open(filename, ios::app);
+    }
+
     if (file.is_open()) {
         for (const Pipe& pipe : pipes) {
             file << "Pipe\n";
@@ -203,6 +211,7 @@ void saveData(const vector<Pipe>& pipes, const vector<CompressorStation>& statio
 }
 
 void loadData(vector<Pipe>& pipes, vector<CompressorStation>& stations, const string& filename) {
+    flag = true;
     ifstream file(filename);
     if (file.is_open()) {
         pipes.clear();
