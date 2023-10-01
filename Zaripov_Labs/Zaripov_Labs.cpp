@@ -6,6 +6,13 @@
 
 using namespace std;
 
+
+void clearInput() {
+    cin.clear();
+    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+}
+
+
 class Pipe {
 public:
     string name;
@@ -27,8 +34,7 @@ public:
             }
             else {
                 cout << "Invalid input. Please enter a non-negative number for length." << endl;
-                cin.clear(); // Очищаем флаги ошибок
-                cin.ignore(numeric_limits<streamsize>::max(), '\n'); // Очищаем буфер ввода
+                clearInput();
             }
         }
 
@@ -39,8 +45,7 @@ public:
             }
             else {
                 cout << "Invalid input. Please enter a non-negative number for diameter." << endl;
-                cin.clear(); // Очищаем флаги ошибок
-                cin.ignore(numeric_limits<streamsize>::max(), '\n'); // Очищаем буфер ввода
+                clearInput();
             }
         }
     }
@@ -61,7 +66,7 @@ class CompressorStation {
 public:
     string name;
     int workshopCount;
-    vector<bool> workshopStatus; 
+    vector<bool> workshopStatus;
     double efficiency;
 
     CompressorStation() : name(""), workshopCount(0), efficiency(0.0) {}
@@ -78,8 +83,7 @@ public:
             }
             else {
                 cout << "Invalid input. Please enter a non-negative integer for workshop count." << endl;
-                cin.clear(); // Очищаем флаги ошибок
-                cin.ignore(numeric_limits<streamsize>::max(), '\n'); // Очищаем буфер ввода
+                clearInput();
             }
         }
 
@@ -90,15 +94,13 @@ public:
             }
             else {
                 cout << "Invalid input. Please enter a non-negative number for efficiency rating." << endl;
-                cin.clear(); // Очищаем флаги ошибок
-                cin.ignore(numeric_limits<streamsize>::max(), '\n'); // Очищаем буфер ввода
+                clearInput();
             }
         }
 
         // Инициализируем workshopStatus в зависимости от workshopCount
         workshopStatus.resize(workshopCount, true);
     }
-
 
     void displayData() const {
         cout << "Station Name: " << name << endl;
@@ -111,8 +113,70 @@ public:
     }
 };
 
+
+void editPipeStatus(vector<Pipe>& pipes) {
+    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+    cout << "Enter the name of the pipe to edit: ";
+    string pipeName;
+    getline(cin, pipeName);
+    bool found = false;
+    for (Pipe& pipe : pipes) {
+        if (pipe.name == pipeName) {
+            found = true;
+            cout << "Choose action: 1. Under repair 2. Operational" << endl;
+            int repairChoice;
+            if (!(cin >> repairChoice)) {
+                cout << "Invalid action choice. Please try again." << endl;
+                clearInput();
+                break;
+            }
+            if (repairChoice == 1) {
+                pipe.inRepair = true;
+                cout << "Status changed to 'Under repair'" << endl;
+            }
+            else if (repairChoice == 2) {
+                pipe.inRepair = false;
+                cout << "Status changed to 'Operational'" << endl;
+            }
+            else {
+                cout << "Invalid action choice." << endl;
+            }
+            break;
+        }
+    }
+    if (!found) {
+        cout << "Pipe with the name '" << pipeName << "' not found." << endl;
+    }
+}
+
+void editWorkshopStatus(vector<CompressorStation>& stations) {
+    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+    cout << "Enter the name of the compressor station to edit: ";
+    string stationName;
+    getline(cin, stationName);
+    bool found = false;
+    for (CompressorStation& station : stations) {
+        if (station.name == stationName) {
+            found = true;
+            cout << "Choose workshop to edit (1-" << station.workshopCount << "): ";
+            int workshopChoice;
+            if (!(cin >> workshopChoice) || workshopChoice < 1 || workshopChoice > station.workshopCount) {
+                cout << "Invalid workshop choice. Please try again." << endl;
+                clearInput();
+                break;
+            }
+            station.workshopStatus[workshopChoice - 1] = !station.workshopStatus[workshopChoice - 1];
+            cout << "Workshop " << workshopChoice << " status changed to '" << (station.workshopStatus[workshopChoice - 1] ? "Operational" : "Not Operational") << "'" << endl;
+            break;
+        }
+    }
+    if (!found) {
+        cout << "Compressor station with the name '" << stationName << "' not found." << endl;
+    }
+}
+
 void saveData(const vector<Pipe>& pipes, const vector<CompressorStation>& stations, const string& filename) {
-    ofstream file(filename, ios::app); // Открываем файл в режиме дозаписи (ios::app)
+    ofstream file(filename, ios::app);
     if (file.is_open()) {
         for (const Pipe& pipe : pipes) {
             file << "Pipe\n";
@@ -160,8 +224,8 @@ void loadData(vector<Pipe>& pipes, vector<CompressorStation>& stations, const st
                 station.workshopStatus.resize(station.workshopCount);
                 for (int i = 0; i < station.workshopCount; i++) {
                     int status;
-                    file >> status; 
-                    station.workshopStatus[i] = (status != 0); // Преобразуем int в bool
+                    file >> status;
+                    station.workshopStatus[i] = (status != 0);
                 }
                 file >> station.efficiency;
                 stations.push_back(station);
@@ -174,7 +238,6 @@ void loadData(vector<Pipe>& pipes, vector<CompressorStation>& stations, const st
         cout << "Error opening the file for loading." << endl;
     }
 }
-
 
 int main() {
     vector<Pipe> pipes;
@@ -196,9 +259,8 @@ int main() {
         int choice;
         if (!(cin >> choice)) {
             cout << "Invalid choice. Please try again." << endl;
-            cin.clear(); // Очищаем флаги ошибок
-            cin.ignore(numeric_limits<streamsize>::max(), '\n'); // Очищаем буфер ввода
-            continue; 
+            clearInput();
+            continue;
         }
         cout << "" << endl;
 
@@ -230,70 +292,14 @@ int main() {
             }
             break;
         }
-        case 4: { 
-            cin.ignore(numeric_limits<streamsize>::max(), '\n');
-            cout << "Enter the name of the pipe to edit: ";
-            string pipeName;
-            getline(cin, pipeName);
-            bool found = false; 
-            for (Pipe& pipe : pipes) {
-                if (pipe.name == pipeName) {
-                    found = true;
-                    cout << "Choose action: 1. Under repair 2. Operational" << endl;
-                    int repairChoice;
-                    if (!(cin >> repairChoice)) {
-                        cout << "Invalid action choice. Please try again." << endl;
-                        cin.clear(); 
-                        cin.ignore(numeric_limits<streamsize>::max(), '\n'); 
-                        break; 
-                    }
-                    if (repairChoice == 1) {
-                        pipe.inRepair = true;
-                        cout << "Status changed to 'Under repair'" << endl;
-                    }
-                    else if (repairChoice == 2) {
-                        pipe.inRepair = false;
-                        cout << "Status changed to 'Operational'" << endl;
-                    }
-                    else {
-                        cout << "Invalid action choice." << endl;
-                    }
-                    break;
-                }
-            }
-            if (!found) {
-                cout << "Pipe with the name '" << pipeName << "' not found." << endl;
-            }
+        case 4: {
+            editPipeStatus(pipes);
             break;
         }
-        case 5: { 
-            cin.ignore(numeric_limits<streamsize>::max(), '\n');
-            cout << "Enter the name of the compressor station to edit: ";
-            string stationName;
-            getline(cin, stationName);
-            bool found = false; 
-            for (CompressorStation& station : stations) {
-                if (station.name == stationName) {
-                    found = true;
-                    cout << "Choose workshop to edit (1-" << station.workshopCount << "): ";
-                    int workshopChoice;
-                    if (!(cin >> workshopChoice) || workshopChoice < 1 || workshopChoice > station.workshopCount) {
-                        cout << "Invalid workshop choice. Please try again." << endl;
-                        cin.clear();
-                        cin.ignore(numeric_limits<streamsize>::max(), '\n');
-                        break;
-                    }
-                    station.workshopStatus[workshopChoice - 1] = !station.workshopStatus[workshopChoice - 1];
-                    cout << "Workshop " << workshopChoice << " status changed to '" << (station.workshopStatus[workshopChoice - 1] ? "Operational" : "Not Operational") << "'" << endl;
-                    break;
-                }
-            }
-            if (!found) {
-                cout << "Compressor station with the name '" << stationName << "' not found." << endl;
-            }
+        case 5: {
+            editWorkshopStatus(stations);
             break;
         }
-
         case 6: {
             saveData(pipes, stations, "data.txt");
             break;
