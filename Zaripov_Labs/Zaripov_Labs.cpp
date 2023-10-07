@@ -5,7 +5,6 @@
 #include <limits>
 
 using namespace std;
-bool flag = false;
 
 
 void clearInput() {
@@ -201,31 +200,49 @@ void editWorkshopStatus(vector<CompressorStation>& stations) {
     cout << "Workshop " << workshopChoice << " status changed to '" << (station.workshopStatus[workshopChoice - 1] ? "Operational" : "Not Operational") << "'" << endl;
 }
 
-void saveData(const vector<Pipe>& pipes, const vector<CompressorStation>& stations, const string& filename) {
-    ofstream file;
-    if (flag) {
-        file.open(filename);
+void savePipe(const Pipe& pipe, ofstream& file) {
+    file << "Pipe\n";
+    file << pipe.name << "\n";
+    file << pipe.length << "\n";
+    file << pipe.diameter << "\n";
+    file << pipe.inRepair << "\n";
+}
+
+void saveStation(const CompressorStation& station, ofstream& file) {
+    file << "Station\n";
+    file << station.name << "\n";
+    file << station.workshopCount << "\n";
+    for (bool status : station.workshopStatus) {
+        file << status << "\n";
     }
-    else {
-        file.open(filename, ios::app);
+    file << station.efficiency << "\n";
+}
+
+void saveData(vector<Pipe>& pipes, vector<CompressorStation>& stations) {
+    cout << "Enter the filename for saving: ";
+    string filename;
+    cin >> filename;
+    filename = filename + ".txt";
+
+    ifstream fileExists(filename);
+    if (fileExists) {
+        cout << "A file with the name '" << filename << "' already exists. Its data will be overwritten. Are you sure? (Y/N) ";
+        char choice;
+        cin >> choice;
+        if (choice != 'Y' && choice != 'y') {
+            cout << "Cancelled. Data not saved." << endl;
+            return;
+        }
     }
+
+    ofstream file(filename);
 
     if (file.is_open()) {
         for (const Pipe& pipe : pipes) {
-            file << "Pipe\n";
-            file << pipe.name << "\n";
-            file << pipe.length << "\n";
-            file << pipe.diameter << "\n";
-            file << pipe.inRepair << "\n";
+            savePipe(pipe, file);
         }
         for (const CompressorStation& station : stations) {
-            file << "Station\n";
-            file << station.name << "\n";
-            file << station.workshopCount << "\n";
-            for (bool status : station.workshopStatus) {
-                file << status << "\n";
-            }
-            file << station.efficiency << "\n";
+            saveStation(station, file);
         }
         file.close();
         cout << "Data successfully saved to the file " << filename << endl;
@@ -235,45 +252,60 @@ void saveData(const vector<Pipe>& pipes, const vector<CompressorStation>& statio
     }
 }
 
-void loadData(vector<Pipe>& pipes, vector<CompressorStation>& stations, const string& filename) {
-    flag = true;
+
+void loadPipe(ifstream& file, vector<Pipe>& pipes) {
+    Pipe pipe;
+    pipe.id = pipes.size() + 1;
+    getline(file, pipe.name);
+    file >> pipe.length;
+    file >> pipe.diameter;
+    file >> pipe.inRepair;
+    pipes.push_back(pipe);
+}
+
+void loadStation(ifstream& file, vector<CompressorStation>& stations) {
+    CompressorStation station;
+    station.id = stations.size()+ 1;
+    getline(file, station.name);
+    file >> station.workshopCount;
+    station.workshopStatus.resize(station.workshopCount);
+    for (int i = 0; i < station.workshopCount; i++) {
+        int status;
+        file >> status;
+        station.workshopStatus[i] = (status != 0);
+    }
+    file >> station.efficiency;
+    stations.push_back(station);
+}
+
+void loadData(vector<Pipe>& pipes, vector<CompressorStation>& stations) {
+    cout << "Enter the filename to load: ";
+    string filename;
+    cin >> filename;
+    filename = filename + ".txt";
+
     ifstream file(filename);
+
     if (file.is_open()) {
         pipes.clear();
         stations.clear();
         string line;
         while (getline(file, line)) {
             if (line == "Pipe") {
-                Pipe pipe;
-                pipe.id = pipes.size() + 1; 
-                getline(file, pipe.name);
-                file >> pipe.length;
-                file >> pipe.diameter;
-                file >> pipe.inRepair;
-                pipes.push_back(pipe);
+                loadPipe(file, pipes);
             }
             else if (line == "Station") {
-                CompressorStation station;
-                station.id = stations.size() + 1; 
-                getline(file, station.name);
-                file >> station.workshopCount;
-                station.workshopStatus.resize(station.workshopCount);
-                for (int i = 0; i < station.workshopCount; i++) {
-                    int status;
-                    file >> status;
-                    station.workshopStatus[i] = (status != 0);
-                }
-                file >> station.efficiency;
-                stations.push_back(station);
+                loadStation(file, stations);
             }
         }
         file.close();
         cout << "Data successfully loaded from the file " << filename << endl;
     }
     else {
-        cout << "Error opening the file for loading." << endl;
+        cout << "File '" << filename << "' not found in the directory." << endl;
     }
 }
+
 
 
 void deletePipe(vector<Pipe>& pipes, int pipeId) {
@@ -353,7 +385,6 @@ int main() {
     vector<Pipe> pipes;
     vector<CompressorStation> stations;
 
-    loadData(pipes, stations, "data.txt");
 
     while (true) {
         cout << "" << endl;
@@ -364,7 +395,8 @@ int main() {
         cout << "4. Editing the operation status of pipes" << endl;
         cout << "5. Starting and stopping workshops" << endl;
         cout << "6. Save" << endl;
-        cout << "7. Delete Object" << endl;
+        cout << "7. Load" << endl;
+        cout << "8. Delete Object" << endl;
         cout << "0. Exit" << endl;
         cout << "" << endl;
 
@@ -413,10 +445,14 @@ int main() {
             break;
         }
         case 6: {
-            saveData(pipes, stations, "data.txt");
+            saveData(pipes, stations);
             break;
         }
         case 7: {
+            loadData(pipes, stations);
+            break;
+        }
+        case 8: {
             deleteObject(pipes, stations);
             break;
         }
