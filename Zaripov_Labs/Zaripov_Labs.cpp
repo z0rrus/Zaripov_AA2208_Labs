@@ -142,9 +142,41 @@ public:
     }
 };
 
+void showPipes(const vector<Pipe>& pipes) {
+    cout << "Pipes:" << endl;
+    cout << "" << endl;
+    if (pipes.empty()) {
+        cout << "No pipes added to the database." << endl;
+        cout << "" << endl;
+    }
+    else {
+        for (const Pipe& pipe : pipes) {
+            pipe.displayData();
+            cout << endl;
+        }
+    }
+}
+
+void showStations(const vector<CompressorStation>& stations) {
+    cout << "Compressor Stations:" << endl;
+    cout << "" << endl;
+    if (stations.empty()) {
+        cout << "No compressor stations added to the database." << endl;
+        cout << "" << endl;
+    }
+    else {
+        for (const CompressorStation& station : stations) {
+            station.displayData();
+            cout << endl;
+        }
+    }
+}
+
+
 
 void editPipeStatus(vector<Pipe>& pipes) {
     cin.ignore(numeric_limits<streamsize>::max(), '\n');
+    showPipes(pipes);
     cout << "Enter the ID of the pipe to edit: ";
     int pipeId;
     if (!(cin >> pipeId) || pipeId < 1 || pipeId > pipes.size()) {
@@ -178,6 +210,7 @@ void editPipeStatus(vector<Pipe>& pipes) {
 
 void editWorkshopStatus(vector<CompressorStation>& stations) {
     cin.ignore(numeric_limits<streamsize>::max(), '\n');
+    showStations(stations);
     cout << "Enter the ID of the compressor station to edit: ";
     int stationId;
     if (!(cin >> stationId) || stationId < 1 || stationId > stations.size()) {
@@ -357,6 +390,7 @@ void deleteObject(vector<Pipe>& pipes, vector<CompressorStation>& stations) {
     }
 
     if (deleteChoice == 1) {
+        showPipes(pipes);
         cout << "Enter the ID of the pipe to delete: ";
         int pipeId;
         if (!(cin >> pipeId)) {
@@ -367,6 +401,7 @@ void deleteObject(vector<Pipe>& pipes, vector<CompressorStation>& stations) {
         deletePipe(pipes, pipeId);
     }
     else if (deleteChoice == 2) {
+        showStations(stations);
         cout << "Enter the ID of the compressor station to delete: ";
         int stationId;
         if (!(cin >> stationId)) {
@@ -380,6 +415,8 @@ void deleteObject(vector<Pipe>& pipes, vector<CompressorStation>& stations) {
         cout << "Invalid choice. Please try again." << endl;
     }
 }
+
+
 
 int main() {
     vector<Pipe> pipes;
@@ -422,18 +459,8 @@ int main() {
             break;
         }
         case 3: {
-            cout << "Pipes:" << endl;
-            cout << "" << endl;
-            for (const Pipe& pipe : pipes) {
-                pipe.displayData();
-                cout << endl;
-            }
-            cout << "Compressor Stations:" << endl;
-            cout << "" << endl;
-            for (const CompressorStation& station : stations) {
-                station.displayData();
-                cout << endl;
-            }
+            showPipes(pipes);
+            showStations(stations);
             break;
         }
         case 4: {
