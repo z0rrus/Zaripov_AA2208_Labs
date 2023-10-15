@@ -79,10 +79,11 @@ public:
     int workshopCount;
     vector<bool> workshopStatus;
     double efficiency;
+    double nonOperationalPercentage;
     int id; 
     static int maxId;
 
-    CompressorStation() : name(""), workshopCount(0), efficiency(0.0) {
+    CompressorStation() : name(""), workshopCount(0), efficiency(0.0), nonOperationalPercentage(0.0) {
         id = getNextId();
     }
 
@@ -116,6 +117,7 @@ public:
         workshopStatus.resize(workshopCount, true);
     }
 
+    
     void displayData() const {
         cout << "ID: " << id << endl;
         cout << "Station Name: " << name << endl;
@@ -125,6 +127,17 @@ public:
             cout << "Workshop " << i + 1 << ": " << (workshopStatus[i] ? "Operational" : "Not Operational") << endl;
         }
         cout << "Efficiency Rating: " << efficiency << endl;
+        cout << "Non-operational Workshop Percentage: " << nonOperationalPercentage << "%" << endl;
+    }
+
+    void updateNonOperationalPercentage() {
+        int nonOperationalCount = 0;
+        for (bool status : workshopStatus) {
+            if (!status) {
+                nonOperationalCount++;
+            }
+        }
+        nonOperationalPercentage = round((nonOperationalCount * 100.0) / workshopCount);
     }
 
 
@@ -135,10 +148,10 @@ public:
 };
 
 void showPipes(const vector<Pipe>& pipes) {
-    cout << "Pipes:" << endl;
+    cout << "PIPES:" << endl;
     cout << "" << endl;
     if (pipes.empty()) {
-        cout << "No pipes added to the database." << endl;
+        cout << "There are no pipes." << endl;
         cout << "" << endl;
     }
     else {
@@ -150,10 +163,10 @@ void showPipes(const vector<Pipe>& pipes) {
 }
 
 void showStations(const vector<CompressorStation>& stations) {
-    cout << "Compressor Stations:" << endl;
+    cout << "COMPRESSOR STATIONS:" << endl;
     cout << "" << endl;
     if (stations.empty()) {
-        cout << "No compressor stations added to the database." << endl;
+        cout << "There are no compressor stations." << endl;
         cout << "" << endl;
     }
     else {
@@ -163,6 +176,197 @@ void showStations(const vector<CompressorStation>& stations) {
         }
     }
 }
+
+void addPipeFilter(vector<Pipe>& pipes, vector<CompressorStation>& stations) {
+    cout << "" << endl;
+    cout << "Choose filter option:" << endl;
+    cout << "1. Add filter by name" << endl;
+    cout << "2. Add filter by operational status" << endl;
+    cout << "0. Back" << endl;
+
+    int filterChoice;
+    if (!(cin >> filterChoice)) {
+        cout << "" << endl;
+        cout << "Invalid choice. Please try again." << endl;
+        clearInput();
+        return;
+    }
+
+    switch (filterChoice) {
+    case 1: {
+        string filterName;
+        cout << "" << endl;
+        cout << "Enter the name for filtering: ";
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        getline(cin, filterName);
+
+
+        vector<Pipe> filteredPipes;
+        for (const Pipe& pipe : pipes) {
+            if (pipe.name == filterName) {
+                filteredPipes.push_back(pipe);
+            }
+        }
+        pipes = filteredPipes;
+        cout << "" << endl;
+        showPipes(pipes);
+        showStations(stations);
+        break;
+    }
+    case 2: {
+        cout << "" << endl;
+        cout << "Choose operational status for filtering: 1. Under repair  2. Operational" << endl;
+        int statusChoice;
+        if (!(cin >> statusChoice) || (statusChoice != 1 && statusChoice != 2)) {
+            cout << "" << endl;
+            cout << "Invalid choice. Please try again." << endl;
+            clearInput();
+            return;
+        }
+
+        bool filterStatus = (statusChoice == 1);
+
+        vector<Pipe> filteredPipes;
+        for (const Pipe& pipe : pipes) {
+            if (pipe.inRepair == filterStatus) {
+                filteredPipes.push_back(pipe);
+            }
+        }
+        pipes = filteredPipes;
+        cout << "" << endl;
+        showPipes(pipes);
+        showStations(stations);
+        break;
+    }
+    case 0: {
+        cout << "" << endl;
+        showPipes(pipes);
+        showStations(stations);
+        return;
+    }
+    default: {
+        cout << "" << endl;
+        cout << "Invalid choice. Please try again." << endl;
+        addPipeFilter(pipes, stations);
+        break;
+    }
+    }
+}
+
+void addStationFilter(vector<Pipe>& pipes, vector<CompressorStation>& stations) {
+    cout << "" << endl;
+    cout << "Choose filter option:" << endl;
+    cout << "1. Add filter by station name" << endl;
+    cout << "2. Add filter by non-operational workshop %" << endl;
+    cout << "0. Back" << endl;
+
+    int filterChoice;
+    if (!(cin >> filterChoice)) {
+        cout << "" << endl;
+        cout << "Invalid choice. Please try again." << endl;
+        clearInput();
+        return;
+    }
+
+    switch (filterChoice) {
+    case 1: {
+        string filterName;
+        cout << "" << endl;
+        cout << "Enter the name for filtering: ";
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        getline(cin, filterName);
+
+        static vector<CompressorStation> filteredStations;
+        for (const CompressorStation& station : stations) {
+            if (station.name == filterName) {
+                filteredStations.push_back(station);
+            }
+        }
+        stations = filteredStations;
+        cout << "" << endl;
+        showPipes(pipes);
+        showStations(stations);
+        break;
+    }
+    case 2: {
+        double nonOperationalPercentage;
+        cout << "" << endl;
+        cout << "Enter % of non-operational workshops for filtering: ";
+        if (!(cin >> nonOperationalPercentage) || nonOperationalPercentage < 0 || nonOperationalPercentage > 100) {
+            cout << "" << endl;
+            cout << "Invalid %. Please try again." << endl;
+            clearInput();
+            return;
+        }
+
+        static vector<CompressorStation> filteredStations;
+        for (const CompressorStation& station : stations) {
+            if (abs(station.nonOperationalPercentage - nonOperationalPercentage) < 0.01) {
+                filteredStations.push_back(station);
+            }
+        }
+        stations = filteredStations;
+        cout << "" << endl;
+        showPipes(pipes);
+        showStations(stations);
+        break;
+    }
+    case 0: {
+        cout << "" << endl;
+        showPipes(pipes);
+        showStations(stations);
+        return;
+    }
+    default: {
+        cout << "" << endl;
+        cout << "Invalid choice. Please try again." << endl;
+        addStationFilter(pipes, stations);
+        break;
+    }
+    }
+}
+
+
+void showObjectsWithFilters(vector<Pipe>& pipes, vector<CompressorStation>& stations) {
+    static vector<CompressorStation> filteredStations;
+    filteredStations = stations;
+    static vector<Pipe> filteredPipes;
+    filteredPipes = pipes;
+    while (true) {
+        cout << "" << endl;
+        cout << "Options:" << endl;
+        cout << "1. Add filter for pipes" << endl;
+        cout << "2. Add filter for stations" << endl;
+        cout << "0. Back to main menu (all filters will be reset)" << endl;
+        int choice;
+        if (!(cin >> choice)) {
+            cout << "" << endl;
+            cout << "Invalid choice. Please try again." << endl;
+            clearInput();
+            continue;
+        }
+
+        switch (choice) {
+        case 1: {
+            addPipeFilter(filteredPipes, filteredStations);
+            break;
+        }
+        case 2: {
+            addStationFilter(filteredPipes, filteredStations);
+            break;
+        }
+        case 0: {
+            return;
+        }
+        default: {
+            cout << "" << endl;
+            cout << "Invalid choice. Please try again." << endl;
+            break;
+        }
+        }
+    }
+}
+
 
 void editPipe(vector<Pipe>& pipes, int pipeId) {
     Pipe& pipe = pipes[pipeId - 1];
@@ -217,7 +421,9 @@ void editWorkshop(CompressorStation& station) {
     }
 
     station.workshopStatus[workshopChoice - 1] = !station.workshopStatus[workshopChoice - 1];
+    station.updateNonOperationalPercentage();
     cout << "Workshop " << workshopChoice << " status changed to '" << (station.workshopStatus[workshopChoice - 1] ? "Operational" : "Not Operational") << "'" << endl;
+    cout << "Updated non-operational workshop percentage: " << station.nonOperationalPercentage << "%" << endl;
 }
 
 void editWorkshopStatus(vector<CompressorStation>& stations) {
@@ -260,6 +466,7 @@ void saveStation(const CompressorStation& station, ofstream& file) {
         file << status << "\n";
     }
     file << station.efficiency << "\n";
+    file << station.nonOperationalPercentage << "\n";
 }
 
 void saveData(vector<Pipe>& pipes, vector<CompressorStation>& stations) {
@@ -350,6 +557,7 @@ void loadStation(ifstream& file, vector<CompressorStation>& stations) {
         station.workshopStatus[i] = static_cast<bool>(status);
     }
     file >> station.efficiency;
+    file >> station.nonOperationalPercentage;
     stations.push_back(station);
 
     calculateMaxStationsId(stations);
@@ -504,6 +712,7 @@ int main() {
         case 3: {
             showPipes(pipes);
             showStations(stations);
+            showObjectsWithFilters(pipes, stations);
             break;
         }
         case 4: {

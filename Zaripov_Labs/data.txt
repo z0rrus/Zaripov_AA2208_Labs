@@ -1,19 +1,45 @@
+Pipe
+1
+11
+1
+1
+0
+Pipe
+2
+11
+2
+2
+0
+Pipe
+3
+22
+3
+3
+0
 Station
 1
-p a 
+p a
+2
 1
 1
-1
+2
+0
 Station
 2
 p b
-2
+3
 1
 1
+1
 2
+0
 Station
 3
-p c
+12
+4
 1
 1
 1
+1
+4
+0
