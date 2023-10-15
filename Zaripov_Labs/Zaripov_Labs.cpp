@@ -19,7 +19,8 @@ public:
     double length;
     double diameter;
     bool inRepair;
-    int id; 
+    int id;
+    static int maxId;
 
     Pipe() : name(""), length(0.0), diameter(0.0), inRepair(false) {
         id = getNextId();
@@ -65,15 +66,10 @@ public:
         inRepair = !inRepair;
     }
     
-    static void recalculateIds(vector<Pipe>& pipes) {
-        for (int i = 0; i < pipes.size(); i++) {
-            pipes[i].id = i + 1;
-        }
-    }
 
     static int getNextId() {
-        static int nextId = 1; 
-        return nextId++;
+        maxId = maxId + 1;
+        return maxId;
     }
 };
 
@@ -84,6 +80,7 @@ public:
     vector<bool> workshopStatus;
     double efficiency;
     int id; 
+    static int maxId;
 
     CompressorStation() : name(""), workshopCount(0), efficiency(0.0) {
         id = getNextId();
@@ -130,15 +127,10 @@ public:
         cout << "Efficiency Rating: " << efficiency << endl;
     }
 
-    static void recalculateIds(vector<CompressorStation>& stations) {
-        for (int i = 0; i < stations.size(); i++) {
-            stations[i].id = i + 1;
-        }
-    }
 
     static int getNextId() {
-        static int nextId = 1; 
-        return nextId++;
+        maxId = maxId + 1;
+        return maxId;
     }
 };
 
@@ -172,20 +164,8 @@ void showStations(const vector<CompressorStation>& stations) {
     }
 }
 
-
-
-void editPipeStatus(vector<Pipe>& pipes) {
-    cin.ignore(numeric_limits<streamsize>::max(), '\n');
-    showPipes(pipes);
-    cout << "Enter the ID of the pipe to edit: ";
-    int pipeId;
-    if (!(cin >> pipeId) || pipeId < 1 || pipeId > pipes.size()) {
-        cout << "Invalid ID. Please try again." << endl;
-        clearInput();
-        return;
-    }
-
-    Pipe& pipe = pipes[pipeId - 1]; 
+void editPipe(vector<Pipe>& pipes, int pipeId) {
+    Pipe& pipe = pipes[pipeId - 1];
 
     cout << "Choose action: 1. Under repair 2. Operational" << endl;
     int repairChoice;
@@ -208,19 +188,26 @@ void editPipeStatus(vector<Pipe>& pipes) {
     }
 }
 
-void editWorkshopStatus(vector<CompressorStation>& stations) {
+void editPipeStatus(vector<Pipe>& pipes) {
+    if (pipes.empty()) {
+        cout << "No pipes added to the database." << endl;
+        return;
+    }
+
     cin.ignore(numeric_limits<streamsize>::max(), '\n');
-    showStations(stations);
-    cout << "Enter the ID of the compressor station to edit: ";
-    int stationId;
-    if (!(cin >> stationId) || stationId < 1 || stationId > stations.size()) {
+    showPipes(pipes);
+    cout << "Enter the ID of the pipe to edit: ";
+    int pipeId;
+    if (!(cin >> pipeId) || pipeId < 1 || pipeId > pipes.size()) {
         cout << "Invalid ID. Please try again." << endl;
         clearInput();
         return;
     }
 
-    CompressorStation& station = stations[stationId - 1]; 
+    editPipe(pipes, pipeId);
+}
 
+void editWorkshop(CompressorStation& station) {
     cout << "Choose workshop to edit (1-" << station.workshopCount << "): ";
     int workshopChoice;
     if (!(cin >> workshopChoice) || workshopChoice < 1 || workshopChoice > station.workshopCount) {
@@ -233,8 +220,31 @@ void editWorkshopStatus(vector<CompressorStation>& stations) {
     cout << "Workshop " << workshopChoice << " status changed to '" << (station.workshopStatus[workshopChoice - 1] ? "Operational" : "Not Operational") << "'" << endl;
 }
 
+void editWorkshopStatus(vector<CompressorStation>& stations) {
+    if (stations.empty()) {
+        cout << "No compressor stations added to the database." << endl;
+        return;
+    }
+
+    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+    showStations(stations);
+    cout << "Enter the ID of the compressor station to edit: ";
+    int stationId;
+    if (!(cin >> stationId) || stationId < 1 || stationId > stations.size()) {
+        cout << "Invalid ID. Please try again." << endl;
+        clearInput();
+        return;
+    }
+
+    CompressorStation& station = stations[stationId - 1];
+
+    editWorkshop(station);
+}
+
+
 void savePipe(const Pipe& pipe, ofstream& file) {
     file << "Pipe\n";
+    file << pipe.id << "\n";
     file << pipe.name << "\n";
     file << pipe.length << "\n";
     file << pipe.diameter << "\n";
@@ -243,6 +253,7 @@ void savePipe(const Pipe& pipe, ofstream& file) {
 
 void saveStation(const CompressorStation& station, ofstream& file) {
     file << "Station\n";
+    file << station.id << "\n";
     file << station.name << "\n";
     file << station.workshopCount << "\n";
     for (bool status : station.workshopStatus) {
@@ -253,8 +264,9 @@ void saveStation(const CompressorStation& station, ofstream& file) {
 
 void saveData(vector<Pipe>& pipes, vector<CompressorStation>& stations) {
     cout << "Enter the filename for saving: ";
+    cin.ignore(numeric_limits<streamsize>::max(), '\n');
     string filename;
-    cin >> filename;
+    getline(cin, filename);
     filename = filename + ".txt";
 
     ifstream fileExists(filename);
@@ -285,36 +297,69 @@ void saveData(vector<Pipe>& pipes, vector<CompressorStation>& stations) {
     }
 }
 
+void calculateMaxId(const vector<Pipe>& pipes) {
+    int maxId = 0;
+    for (const auto& pipe : pipes) {
+        if (pipe.id > maxId) {
+            maxId = pipe.id;
+        }
+    }
+    Pipe::maxId = maxId;
+}
 
 void loadPipe(ifstream& file, vector<Pipe>& pipes) {
+    string line;
     Pipe pipe;
-    pipe.id = pipes.size() + 1;
-    getline(file, pipe.name);
+    string temp;
+    int id;
+    file >> id;
+    pipe.id = id;
+    file.ignore(); // ignore the newline character
+    getline(file, pipe.name); 
     file >> pipe.length;
     file >> pipe.diameter;
-    file >> pipe.inRepair;
+    int repairStatus;
+    file >> repairStatus;
+    pipe.inRepair = (repairStatus != 0);
     pipes.push_back(pipe);
+
+    calculateMaxId(pipes);
+}
+
+void calculateMaxStationsId(const vector<CompressorStation>& stations) {
+    int maxId = 0;
+    for (const auto& station : stations) {
+        if (station.id > maxId) {
+            maxId = station.id;
+        }
+    }
+    CompressorStation::maxId = maxId;
 }
 
 void loadStation(ifstream& file, vector<CompressorStation>& stations) {
     CompressorStation station;
-    station.id = stations.size()+ 1;
+    string temp; 
+    file >> station.id;
+    getline(file, temp); 
     getline(file, station.name);
     file >> station.workshopCount;
     station.workshopStatus.resize(station.workshopCount);
     for (int i = 0; i < station.workshopCount; i++) {
         int status;
         file >> status;
-        station.workshopStatus[i] = (status != 0);
+        station.workshopStatus[i] = static_cast<bool>(status);
     }
     file >> station.efficiency;
     stations.push_back(station);
+
+    calculateMaxStationsId(stations);
 }
 
 void loadData(vector<Pipe>& pipes, vector<CompressorStation>& stations) {
     cout << "Enter the filename to load: ";
+    cin.ignore(numeric_limits<streamsize>::max(), '\n');
     string filename;
-    cin >> filename;
+    getline(cin, filename);
     filename = filename + ".txt";
 
     ifstream file(filename);
@@ -348,14 +393,12 @@ void deletePipe(vector<Pipe>& pipes, int pipeId) {
             pipes.erase(it); 
             found = true;
             cout << "Pipe with ID " << pipeId << " has been deleted." << endl;
+            calculateMaxId(pipes);
             break;
         }
     }
     if (!found) {
         cout << "Pipe with ID " << pipeId << " not found." << endl;
-    }
-    else {
-        Pipe::recalculateIds(pipes); 
     }
 }
 
@@ -366,14 +409,12 @@ void deleteCompressorStation(vector<CompressorStation>& stations, int stationId)
             stations.erase(it); 
             found = true;
             cout << "Compressor Station with ID " << stationId << " has been deleted." << endl;
+            calculateMaxStationsId(stations);
             break;
         }
     }
     if (!found) {
         cout << "Compressor Station with ID " << stationId << " not found." << endl;
-    }
-    else {
-        CompressorStation::recalculateIds(stations); 
     }
 }
 
@@ -417,6 +458,8 @@ void deleteObject(vector<Pipe>& pipes, vector<CompressorStation>& stations) {
 }
 
 
+int Pipe::maxId = 0;
+int CompressorStation::maxId = 0;
 
 int main() {
     vector<Pipe> pipes;

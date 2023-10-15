@@ -1,5 +1,19 @@
-Pipe
+Station
+1
+p a 
 1
 1
 1
-0
+Station
+2
+p b
+2
+1
+1
+2
+Station
+3
+p c
+1
+1
+1
