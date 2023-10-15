@@ -120,14 +120,14 @@ public:
     
     void displayData() const {
         cout << "ID: " << id << endl;
-        cout << "Station Name: " << name << endl;
-        cout << "Workshop Count: " << workshopCount << endl;
-        cout << "Workshop Status:" << endl;
+        cout << "Station name: " << name << endl;
+        cout << "Workshop count: " << workshopCount << endl;
+        cout << "Workshop status:" << endl;
         for (int i = 0; i < workshopCount; i++) {
-            cout << "Workshop " << i + 1 << ": " << (workshopStatus[i] ? "Operational" : "Not Operational") << endl;
+            cout << "Workshop " << i + 1 << ": " << (workshopStatus[i] ? "Operational" : "Not operational") << endl;
         }
-        cout << "Efficiency Rating: " << efficiency << endl;
-        cout << "Non-operational Workshop Percentage: " << nonOperationalPercentage << "%" << endl;
+        cout << "Efficiency rating: " << efficiency << endl;
+        cout << "Non-operational workshops: " << nonOperationalPercentage << "%" << endl;
     }
 
     void updateNonOperationalPercentage() {
@@ -177,7 +177,7 @@ void showStations(const vector<CompressorStation>& stations) {
     }
 }
 
-void addPipeFilter(vector<Pipe>& pipes, vector<CompressorStation>& stations) {
+void addPipeFilter(vector<Pipe>& pipes) {
     cout << "" << endl;
     cout << "Choose filter option:" << endl;
     cout << "1. Add filter by name" << endl;
@@ -197,9 +197,8 @@ void addPipeFilter(vector<Pipe>& pipes, vector<CompressorStation>& stations) {
         string filterName;
         cout << "" << endl;
         cout << "Enter the name for filtering: ";
-        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        cin.ignore(numeric_limits<streamsize>::max(), '\n'); 
         getline(cin, filterName);
-
 
         vector<Pipe> filteredPipes;
         for (const Pipe& pipe : pipes) {
@@ -209,8 +208,6 @@ void addPipeFilter(vector<Pipe>& pipes, vector<CompressorStation>& stations) {
         }
         pipes = filteredPipes;
         cout << "" << endl;
-        showPipes(pipes);
-        showStations(stations);
         break;
     }
     case 2: {
@@ -234,26 +231,21 @@ void addPipeFilter(vector<Pipe>& pipes, vector<CompressorStation>& stations) {
         }
         pipes = filteredPipes;
         cout << "" << endl;
-        showPipes(pipes);
-        showStations(stations);
         break;
     }
     case 0: {
-        cout << "" << endl;
-        showPipes(pipes);
-        showStations(stations);
         return;
     }
     default: {
         cout << "" << endl;
         cout << "Invalid choice. Please try again." << endl;
-        addPipeFilter(pipes, stations);
+        addPipeFilter(pipes);
         break;
     }
     }
 }
 
-void addStationFilter(vector<Pipe>& pipes, vector<CompressorStation>& stations) {
+void addStationFilter(vector<CompressorStation>& stations) {
     cout << "" << endl;
     cout << "Choose filter option:" << endl;
     cout << "1. Add filter by station name" << endl;
@@ -284,8 +276,6 @@ void addStationFilter(vector<Pipe>& pipes, vector<CompressorStation>& stations) 
         }
         stations = filteredStations;
         cout << "" << endl;
-        showPipes(pipes);
-        showStations(stations);
         break;
     }
     case 2: {
@@ -307,20 +297,15 @@ void addStationFilter(vector<Pipe>& pipes, vector<CompressorStation>& stations) 
         }
         stations = filteredStations;
         cout << "" << endl;
-        showPipes(pipes);
-        showStations(stations);
         break;
     }
     case 0: {
-        cout << "" << endl;
-        showPipes(pipes);
-        showStations(stations);
         return;
     }
     default: {
         cout << "" << endl;
         cout << "Invalid choice. Please try again." << endl;
-        addStationFilter(pipes, stations);
+        addStationFilter(stations);
         break;
     }
     }
@@ -333,6 +318,9 @@ void showObjectsWithFilters(vector<Pipe>& pipes, vector<CompressorStation>& stat
     static vector<Pipe> filteredPipes;
     filteredPipes = pipes;
     while (true) {
+        cout << "" << endl;
+        showPipes(filteredPipes);
+        showStations(filteredStations);
         cout << "" << endl;
         cout << "Options:" << endl;
         cout << "1. Add filter for pipes" << endl;
@@ -348,11 +336,11 @@ void showObjectsWithFilters(vector<Pipe>& pipes, vector<CompressorStation>& stat
 
         switch (choice) {
         case 1: {
-            addPipeFilter(filteredPipes, filteredStations);
+            addPipeFilter(filteredPipes);
             break;
         }
         case 2: {
-            addStationFilter(filteredPipes, filteredStations);
+            addStationFilter(filteredStations);
             break;
         }
         case 0: {
@@ -368,48 +356,142 @@ void showObjectsWithFilters(vector<Pipe>& pipes, vector<CompressorStation>& stat
 }
 
 
-void editPipe(vector<Pipe>& pipes, int pipeId) {
-    Pipe& pipe = pipes[pipeId - 1];
-
-    cout << "Choose action: 1. Under repair 2. Operational" << endl;
-    int repairChoice;
-    if (!(cin >> repairChoice)) {
-        cout << "Invalid action choice. Please try again." << endl;
-        clearInput();
-        return;
-    }
-
-    if (repairChoice == 1) {
-        pipe.inRepair = true;
-        cout << "Status changed to 'Under repair'" << endl;
-    }
-    else if (repairChoice == 2) {
-        pipe.inRepair = false;
-        cout << "Status changed to 'Operational'" << endl;
-    }
-    else {
-        cout << "Invalid action choice." << endl;
-    }
-}
-
 void editPipeStatus(vector<Pipe>& pipes) {
     if (pipes.empty()) {
-        cout << "No pipes added to the database." << endl;
+        cout << "There are no pipes." << endl;
         return;
     }
 
+    static vector<Pipe> filteredPipes;
+    filteredPipes = pipes;
     cin.ignore(numeric_limits<streamsize>::max(), '\n');
-    showPipes(pipes);
-    cout << "Enter the ID of the pipe to edit: ";
-    int pipeId;
-    if (!(cin >> pipeId) || pipeId < 1 || pipeId > pipes.size()) {
-        cout << "Invalid ID. Please try again." << endl;
-        clearInput();
-        return;
-    }
+    while (true) {
+        cout << "" << endl;
+        showPipes(filteredPipes);
+        cout << "" << endl;
+        cout << "Choose an option: " << endl;
+        cout << "1. Enter pipes ID for editing" << endl;
+        cout << "2. Edit all pipes in this list" << endl;
+        cout << "3. Add filter" << endl;
+        cout << "0. Back to main menu (all filters will be reset)" << endl;
+        int editChoice;
+        if (!(cin >> editChoice)) {
+            cout << "" << endl;
+            cout << "Invalid choice. Please try again." << endl;
+            continue;
+        }
 
-    editPipe(pipes, pipeId);
+        switch (editChoice) {
+        case 1: {
+            cout << "" << endl;
+            cout << "Enter the IDs of the pipes to edit (separated by space): ";
+            cout << "" << endl;
+            vector<int> pipeIds;
+            int pipeId;
+            bool validIdFound = false;
+            while (cin >> pipeId) {
+                if (pipeId < 1 || pipeId > Pipe::maxId) {
+                    cout << "Invalid ID " << pipeId << ". Skipping..." << endl;
+                }
+                else {
+                    validIdFound = true;
+                    pipeIds.push_back(pipeId);
+                }
+                if (cin.peek() == '\n') {
+                    break;
+                }
+            }
+
+            if (!validIdFound) {
+                editPipeStatus(filteredPipes);
+                break;
+            }
+
+            cout << "" << endl;
+            cout << "Choose action: 1. Under repair 2. Operational" << endl;
+            int repairChoice;
+            if (!(cin >> repairChoice) || (repairChoice != 1 && repairChoice != 2)) {
+                cout << "" << endl;
+                cout << "INVALID ACTION CHOICE. PLEASE TRY AGAIN." << endl;
+                break;
+            }
+
+            bool newStatus = (repairChoice == 1);
+
+            vector<int> modifiedPipeIds;
+            for (auto& pipe : pipes) {
+                for (int id : pipeIds) {
+                    if (pipe.id == id) {
+                        pipe.inRepair = newStatus;
+                        modifiedPipeIds.push_back(id);
+                    }
+                }
+            }
+            filteredPipes = pipes;
+
+            if (!modifiedPipeIds.empty()) {
+                cout << "" << endl;
+                cout << "Status of pipes with IDs ";
+                for (size_t i = 0; i < modifiedPipeIds.size(); ++i) {
+                    if (i != 0) {
+                        cout << ", ";
+                    }
+                    cout << modifiedPipeIds[i];
+                }
+                cout << " changed to '" << (newStatus ? "Under repair" : "Operational") << "'" << endl;
+            }
+            return;
+        }
+        case 2: {
+            cout << "" << endl;
+            cout << "Choose action: 1. Under repair 2. Operational" << endl;
+            int repairChoice;
+            if (!(cin >> repairChoice) || (repairChoice != 1 && repairChoice != 2)) {
+                cout << "" << endl;
+                cout << "INVALID ACTION CHOICE. PLEASE TRY AGAIN." << endl;
+                break;
+            }
+
+            bool newStatus = (repairChoice == 1);
+
+            vector<int> modifiedPipeIds;
+            for (auto& pipe : pipes) {
+                for (auto& filteredPipe : filteredPipes) {
+                    if (pipe.id == filteredPipe.id) {
+                        modifiedPipeIds.push_back(pipe.id);
+                        pipe.inRepair = newStatus;  
+                    }
+                }
+            }
+            filteredPipes = pipes;
+            cout << "" << endl;
+            cout << "Status of pipes with IDs ";
+            for (size_t i = 0; i < modifiedPipeIds.size(); ++i) {
+                if (i != 0) {
+                    cout << ", ";
+                }
+                cout << modifiedPipeIds[i];
+            }
+            cout << " changed to '" << (newStatus ? "Under repair" : "Operational") << "'" << endl;
+            return;
+        }
+        case 3: {
+            addPipeFilter(filteredPipes);
+            break;
+        }
+        case 0: {
+            return;
+        }
+        default: {
+            cout << "" << endl;
+            cout << "INVALID ACTION CHOICE. PLEASE TRY AGAIN." << endl;
+            break;
+        }
+    }
+    }
 }
+
+
 
 void editWorkshop(CompressorStation& station) {
     cout << "Choose workshop to edit (1-" << station.workshopCount << "): ";
@@ -436,7 +518,7 @@ void editWorkshopStatus(vector<CompressorStation>& stations) {
     showStations(stations);
     cout << "Enter the ID of the compressor station to edit: ";
     int stationId;
-    if (!(cin >> stationId) || stationId < 1 || stationId > stations.size()) {
+    if (!(cin >> stationId) || stationId < 1 || stationId > CompressorStation::maxId) {
         cout << "Invalid ID. Please try again." << endl;
         clearInput();
         return;
@@ -710,8 +792,6 @@ int main() {
             break;
         }
         case 3: {
-            showPipes(pipes);
-            showStations(stations);
             showObjectsWithFilters(pipes, stations);
             break;
         }
