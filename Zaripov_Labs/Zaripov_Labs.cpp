@@ -14,13 +14,15 @@ void clearInput() {
 
 
 class Pipe {
-public:
+private:
     string name;
     double length;
     double diameter;
     bool inRepair;
     int id;
     static int maxId;
+
+public:
 
     Pipe() : name(""), length(0.0), diameter(0.0), inRepair(false) {
         id = getNextId();
@@ -74,14 +76,16 @@ public:
 };
 
 class CompressorStation {
-public:
+private:
     string name;
     int workshopCount;
     vector<bool> workshopStatus;
     double efficiency;
     double nonOperationalPercentage;
-    int id; 
+    int id;
     static int maxId;
+
+public:
 
     CompressorStation() : name(""), workshopCount(0), efficiency(0.0), nonOperationalPercentage(0.0) {
         id = getNextId();
@@ -94,11 +98,27 @@ public:
 
         while (true) {
             cout << "Enter workshop count: ";
-            if (cin >> workshopCount && workshopCount >= 0) {
+            if (cin >> workshopCount && workshopCount > 0) {
                 break;
             }
             else {
                 cout << "Invalid input. Please enter a non-negative integer for workshop count." << endl;
+                clearInput();
+            }
+        }
+
+        while (true) {
+            cout << "Enter the number of operational workshops: ";
+            int operationalWorkshops;
+            if (cin >> operationalWorkshops && operationalWorkshops >= 0 && operationalWorkshops <= workshopCount) {
+                workshopStatus.resize(workshopCount, false); 
+                for (int i = 0; i < operationalWorkshops; i++) {
+                    workshopStatus[i] = true; 
+                }
+                break;
+            }
+            else {
+                cout << "Invalid input. Please enter a non-negative integer no greater than workshop count." << endl;
                 clearInput();
             }
         }
@@ -113,9 +133,9 @@ public:
                 clearInput();
             }
         }
-
-        workshopStatus.resize(workshopCount, true);
+        updateNonOperationalPercentage();
     }
+
 
     
     void displayData() const {
@@ -202,7 +222,7 @@ void addPipeFilter(vector<Pipe>& pipes) {
 
         vector<Pipe> filteredPipes;
         for (const Pipe& pipe : pipes) {
-            if (pipe.name == filterName) {
+            if (pipe.name.find(filterName) != string::npos) {
                 filteredPipes.push_back(pipe);
             }
         }
@@ -270,7 +290,7 @@ void addStationFilter(vector<CompressorStation>& stations) {
 
         static vector<CompressorStation> filteredStations;
         for (const CompressorStation& station : stations) {
-            if (station.name == filterName) {
+            if (station.name.find(filterName) != string::npos) {
                 filteredStations.push_back(station);
             }
         }
@@ -279,19 +299,59 @@ void addStationFilter(vector<CompressorStation>& stations) {
         break;
     }
     case 2: {
-        double nonOperationalPercentage;
+        string input;
         cout << "" << endl;
-        cout << "Enter % of non-operational workshops for filtering: ";
-        if (!(cin >> nonOperationalPercentage) || nonOperationalPercentage < 0 || nonOperationalPercentage > 100) {
+        cout << "Enter comparison operator and the percentage value for filtering (e.g., '>56' or '<=40'): ";
+        cin >> input;
+
+        string comparisonOperator;
+        double nonOperationalPercentage;
+
+        if (input.find_first_not_of("0123456789.") == string::npos) {
+            nonOperationalPercentage = stod(input);
+            comparisonOperator = "=";
+        }
+        else {
+            comparisonOperator = input.substr(0, 2);
+            if (comparisonOperator != "<=" && comparisonOperator != ">=" && comparisonOperator != "<" && comparisonOperator != ">" && comparisonOperator != "==") {
+                comparisonOperator = input.substr(0, 1);
+            }
+            string percentageString = input.substr(comparisonOperator.length());
+
+            try {
+                nonOperationalPercentage = stod(percentageString);
+            }
+            catch (...) {
+                cout << "" << endl;
+                cout << "Invalid input format. Please try again." << endl;
+                clearInput();
+                return;
+            }
+        }
+
+        if ((comparisonOperator != "<" && comparisonOperator != ">" && comparisonOperator != "<=" && comparisonOperator != ">=" && comparisonOperator != "==")) {
             cout << "" << endl;
-            cout << "Invalid %. Please try again." << endl;
+            cout << "Invalid comparison operator. Please try again." << endl;
+            clearInput();
+            return;
+        }
+
+        if (nonOperationalPercentage < 0 || nonOperationalPercentage > 100) {
+            cout << "" << endl;
+            cout << "Invalid percentage. Please try again." << endl;
             clearInput();
             return;
         }
 
         static vector<CompressorStation> filteredStations;
+        filteredStations.clear();
         for (const CompressorStation& station : stations) {
-            if (abs(station.nonOperationalPercentage - nonOperationalPercentage) < 0.01) {
+            if ((comparisonOperator == "<" && station.nonOperationalPercentage < nonOperationalPercentage) ||
+                (comparisonOperator == ">" && station.nonOperationalPercentage > nonOperationalPercentage) ||
+                (comparisonOperator == "<=" && station.nonOperationalPercentage <= nonOperationalPercentage) ||
+                (comparisonOperator == ">=" && station.nonOperationalPercentage >= nonOperationalPercentage) ||
+                (comparisonOperator == "==" && abs(station.nonOperationalPercentage - nonOperationalPercentage) < 0.01) ||
+                (comparisonOperator == "=" && abs(station.nonOperationalPercentage - nonOperationalPercentage) < 0.01)) {
                 filteredStations.push_back(station);
             }
         }
@@ -518,16 +578,23 @@ void editWorkshopStatus(vector<CompressorStation>& stations) {
     showStations(stations);
     cout << "Enter the ID of the compressor station to edit: ";
     int stationId;
-    if (!(cin >> stationId) || stationId < 1 || stationId > CompressorStation::maxId) {
+    if (!(cin >> stationId)) {
         cout << "Invalid ID. Please try again." << endl;
         clearInput();
         return;
     }
 
-    CompressorStation& station = stations[stationId - 1];
+    auto it = find_if(stations.begin(), stations.end(), [stationId](const CompressorStation& s) { return s.id == stationId; });
+    if (it == stations.end()) {
+        cout << "Compressor Station with ID " << stationId << " not found." << endl;
+        return;
+    }
+
+    CompressorStation& station = *it;
 
     editWorkshop(station);
 }
+
 
 
 void savePipe(const Pipe& pipe, ofstream& file) {
@@ -603,7 +670,7 @@ void loadPipe(ifstream& file, vector<Pipe>& pipes) {
     int id;
     file >> id;
     pipe.id = id;
-    file.ignore(); // ignore the newline character
+    file.ignore(); 
     getline(file, pipe.name); 
     file >> pipe.length;
     file >> pipe.diameter;
@@ -645,6 +712,27 @@ void loadStation(ifstream& file, vector<CompressorStation>& stations) {
     calculateMaxStationsId(stations);
 }
 
+void updateMaxPipeId(const vector<Pipe>& pipes) {
+    int maxId = 0;
+    for (const auto& pipe : pipes) {
+        if (pipe.id > maxId) {
+            maxId = pipe.id;
+        }
+    }
+    Pipe::maxId = maxId;
+}
+
+
+void updateMaxStationId(const vector<CompressorStation>& stations) {
+    int maxId = 0;
+    for (const auto& station : stations) {
+        if (station.id > maxId) {
+            maxId = station.id;
+        }
+    }
+    CompressorStation::maxId = maxId;
+}
+
 void loadData(vector<Pipe>& pipes, vector<CompressorStation>& stations) {
     cout << "Enter the filename to load: ";
     cin.ignore(numeric_limits<streamsize>::max(), '\n');
@@ -667,6 +755,10 @@ void loadData(vector<Pipe>& pipes, vector<CompressorStation>& stations) {
             }
         }
         file.close();
+
+        updateMaxPipeId(pipes);
+        updateMaxStationId(stations);
+
         cout << "Data successfully loaded from the file " << filename << endl;
     }
     else {
