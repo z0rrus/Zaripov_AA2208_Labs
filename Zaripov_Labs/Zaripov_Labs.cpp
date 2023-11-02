@@ -3,6 +3,8 @@
 #include <vector>
 #include <string>
 #include <limits>
+#include <ctime>
+
 
 using namespace std;
 
@@ -12,6 +14,32 @@ void clearInput() {
     cin.ignore(numeric_limits<streamsize>::max(), '\n');
 }
 
+void logInput(const string& input) {
+    static bool firstTime = true;
+    static ofstream logfile("log.txt", ios::app);
+    if (logfile.is_open()) {
+        if (firstTime) {
+            time_t now = time(0);
+            tm ltm;
+            localtime_s(&ltm, &now);
+            char buffer[32];
+            logfile << endl;
+            strftime(buffer, sizeof(buffer), "%d/%m/%Y %H:%M:%S", &ltm);
+            logfile << buffer << " - Program started" << endl;
+            firstTime = false;
+        }
+        time_t now = time(0);
+        tm ltm;
+        localtime_s(&ltm, &now);
+        char buffer[32];
+        strftime(buffer, sizeof(buffer), "%d/%m/%Y %H:%M:%S", &ltm);
+        logfile << buffer << " - " << input << endl;
+        logfile.flush(); // Принудительная запись буфера в файл
+    }
+    else {
+        cerr << "Unable to open log file." << endl;
+    }
+}
 
 class Pipe {
 private:
@@ -69,13 +97,16 @@ public:
         cin.ignore(numeric_limits<streamsize>::max(), '\n');
         cout << "Enter pipe name: ";
         getline(cin, name);
+        logInput("User input: " + name);
 
         while (true) {
             cout << "Enter pipe length (km): ";
             if (cin >> length && length >= 0) {
+                logInput("User input: " + to_string(length));
                 break;
             }
             else {
+                logInput("User input: " + to_string(length));
                 cout << "Invalid input. Please enter a non-negative number for length." << endl;
                 clearInput();
             }
@@ -84,9 +115,11 @@ public:
         while (true) {
             cout << "Enter pipe diameter (cm): ";
             if (cin >> diameter && diameter >= 0) {
+                logInput("User input: " + to_string(diameter));
                 break;
             }
             else {
+                logInput("User input: " + to_string(diameter));
                 cout << "Invalid input. Please enter a non-negative number for diameter." << endl;
                 clearInput();
             }
@@ -166,13 +199,16 @@ public:
         cin.ignore(numeric_limits<streamsize>::max(), '\n');
         cout << "Enter station name: ";
         getline(cin, name);
+        logInput("User input: " + name);
 
         while (true) {
             cout << "Enter workshop count: ";
             if (cin >> workshopCount && workshopCount > 0) {
+                logInput("User input: " + to_string(workshopCount));
                 break;
             }
             else {
+                logInput("User input: " + to_string(workshopCount));
                 cout << "Invalid input. Please enter a non-negative integer for workshop count." << endl;
                 clearInput();
             }
@@ -182,6 +218,7 @@ public:
             cout << "Enter the number of operational workshops: ";
             int operationalWorkshops;
             if (cin >> operationalWorkshops && operationalWorkshops >= 0 && operationalWorkshops <= workshopCount) {
+                logInput("User input: " + to_string(operationalWorkshops));
                 workshopStatus.resize(workshopCount, false); 
                 for (int i = 0; i < operationalWorkshops; i++) {
                     workshopStatus[i] = true; 
@@ -189,6 +226,7 @@ public:
                 break;
             }
             else {
+                logInput("User input: " + to_string(operationalWorkshops));
                 cout << "Invalid input. Please enter a non-negative integer no greater than workshop count." << endl;
                 clearInput();
             }
@@ -197,9 +235,11 @@ public:
         while (true) {
             cout << "Enter efficiency rating: ";
             if (cin >> efficiency && efficiency >= 0) {
+                logInput("User input: " + to_string(efficiency));
                 break;
             }
             else {
+                logInput("User input: " + to_string(efficiency));
                 cout << "Invalid input. Please enter a non-negative number for efficiency rating." << endl;
                 clearInput();
             }
@@ -282,6 +322,7 @@ void addPipeFilter(vector<Pipe>& pipes) {
         clearInput();
         return;
     }
+    logInput("User input: " + to_string(filterChoice));
 
     switch (filterChoice) {
     case 1: {
@@ -290,6 +331,7 @@ void addPipeFilter(vector<Pipe>& pipes) {
         cout << "Enter the name for filtering: ";
         cin.ignore(numeric_limits<streamsize>::max(), '\n'); 
         getline(cin, filterName);
+        logInput("User input: " + filterName);
 
         vector<Pipe> filteredPipes;
         for (const Pipe& pipe : pipes) {
@@ -310,8 +352,10 @@ void addPipeFilter(vector<Pipe>& pipes) {
             cout << "" << endl;
             cout << "Invalid choice. Please try again." << endl;
             clearInput();
+            logInput("User input: " + to_string(statusChoice));
             return;
         }
+        logInput("User input: " + to_string(statusChoice));
 
         bool filterStatus = (statusChoice == 1);
 
@@ -352,6 +396,7 @@ void addStationFilter(vector<CompressorStation>& stations) {
         clearInput();
         return;
     }
+    logInput("User input: " + to_string(filterChoice));
 
     switch (filterChoice) {
     case 1: {
@@ -360,6 +405,7 @@ void addStationFilter(vector<CompressorStation>& stations) {
         cout << "Enter the name for filtering: ";
         cin.ignore(numeric_limits<streamsize>::max(), '\n');
         getline(cin, filterName);
+        logInput("User input: " + filterName);
 
         static vector<CompressorStation> filteredStations;
         for (const CompressorStation& station : stations) {
@@ -379,6 +425,8 @@ void addStationFilter(vector<CompressorStation>& stations) {
 
         string comparisonOperator;
         double nonOperationalPercentage;
+        logInput("User input: " + input);
+
 
         if (input.find_first_not_of("0123456789.") == string::npos) {
             nonOperationalPercentage = stod(input);
@@ -466,9 +514,10 @@ void showObjectsWithFilters(vector<Pipe>& pipes, vector<CompressorStation>& stat
             cout << "" << endl;
             cout << "Invalid choice. Please try again." << endl;
             clearInput();
+            logInput("User input: " + to_string(choice));
             continue;
         }
-
+        logInput("User input: " + to_string(choice));
         switch (choice) {
         case 1: {
             addPipeFilter(filteredPipes);
@@ -513,9 +562,10 @@ void editPipeStatus(vector<Pipe>& pipes) {
         if (!(cin >> editChoice)) {
             cout << "" << endl;
             cout << "Invalid choice. Please try again." << endl;
+            logInput("User input: " + to_string(editChoice));
             continue;
         }
-
+        logInput("User input: " + to_string(editChoice));
         switch (editChoice) {
         case 1: {
             cout << "" << endl;
@@ -525,6 +575,7 @@ void editPipeStatus(vector<Pipe>& pipes) {
             int pipeId;
             bool validIdFound = false;
             while (cin >> pipeId) {
+                logInput("User input: " + to_string(pipeId));
                 if (pipeId < 1 || pipeId > Pipe::maxId) {
                     cout << "Invalid ID " << pipeId << ". Skipping..." << endl;
                 }
@@ -548,9 +599,10 @@ void editPipeStatus(vector<Pipe>& pipes) {
             if (!(cin >> repairChoice) || (repairChoice != 1 && repairChoice != 2)) {
                 cout << "" << endl;
                 cout << "INVALID ACTION CHOICE. PLEASE TRY AGAIN." << endl;
+                logInput("User input: " + to_string(repairChoice));
                 break;
             }
-
+            logInput("User input: " + to_string(repairChoice));
             bool newStatus = (repairChoice == 1);
 
             vector<int> modifiedPipeIds;
@@ -588,6 +640,7 @@ void editPipeStatus(vector<Pipe>& pipes) {
                 cout << "INVALID ACTION CHOICE. PLEASE TRY AGAIN." << endl;
                 break;
             }
+            logInput("User input: " + to_string(repairChoice));
 
             bool newStatus = (repairChoice == 1);
             bool pipe_id;
@@ -632,8 +685,6 @@ void editPipeStatus(vector<Pipe>& pipes) {
     }
 }
 
-
-
 void editWorkshop(CompressorStation& station) {
     cout << "Choose workshop to edit (1-" << station.workshopCount << "): ";
     int workshopChoice;
@@ -642,6 +693,7 @@ void editWorkshop(CompressorStation& station) {
         clearInput();
         return;
     }
+    logInput("User input: " + to_string(workshopChoice));
 
     station.workshopStatus[workshopChoice - 1] = !station.workshopStatus[workshopChoice - 1];
     station.updateNonOperationalPercentage();
@@ -667,6 +719,7 @@ void editWorkshopStatus(vector<CompressorStation>& stations) {
         clearInput();
         return;
     }
+    logInput("User input: " + to_string(stationId));
 
     auto it = find_if(stations.begin(), stations.end(), [stationId](const CompressorStation& s) { return s.getId() == stationId; });
     if (it == stations.end()) {
@@ -708,6 +761,7 @@ void saveData(vector<Pipe>& pipes, vector<CompressorStation>& stations) {
     cin.ignore(numeric_limits<streamsize>::max(), '\n');
     string filename;
     getline(cin, filename);
+    logInput("User input: " + filename);
     filename = filename + ".txt";
 
     ifstream fileExists(filename);
@@ -715,6 +769,7 @@ void saveData(vector<Pipe>& pipes, vector<CompressorStation>& stations) {
         cout << "A file with the name '" << filename << "' already exists. Its data will be overwritten. Are you sure? (Y/N) ";
         char choice;
         cin >> choice;
+        logInput("User input: " + to_string(choice));
         if (choice != 'Y' && choice != 'y') {
             cout << "Cancelled. Data not saved." << endl;
             return;
@@ -841,6 +896,7 @@ void loadData(vector<Pipe>& pipes, vector<CompressorStation>& stations) {
     cin.ignore(numeric_limits<streamsize>::max(), '\n');
     string filename;
     getline(cin, filename);
+    logInput("User input: " + filename);
     filename = filename + ".txt";
 
     ifstream file(filename);
@@ -913,8 +969,10 @@ void deleteObject(vector<Pipe>& pipes, vector<CompressorStation>& stations) {
     if (!(cin >> deleteChoice)) {
         cout << "Invalid choice. Please try again." << endl;
         clearInput();
+        logInput("User input: " + to_string(deleteChoice));
         return;
     }
+    logInput("User input: " + to_string(deleteChoice));
 
     if (deleteChoice == 1) {
         showPipes(pipes);
@@ -972,6 +1030,7 @@ int main() {
             clearInput();
             continue;
         }
+        logInput("User input: " + to_string(choice));
         cout << "" << endl;
 
         switch (choice) {
@@ -1016,7 +1075,8 @@ int main() {
             return 0;
         }
         default: {
-            cout << "Invalid choice. Please try again." << endl;
+            string action = "Invalid choice entered. Please try again.";
+            cout << action << endl;
             break;
         }
         }
