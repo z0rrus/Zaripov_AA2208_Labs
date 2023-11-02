@@ -1,13 +1,11 @@
-﻿#include <iostream>
+#include "Utils.h"
+#include <iostream>
 #include <fstream>
 #include <vector>
 #include <string>
-#include <limits>
 #include <ctime>
 
-
 using namespace std;
-
 
 void clearInput() {
     cin.clear();
@@ -31,252 +29,13 @@ void logInput(const string& input) {
         time_t now = time(0);
         tm ltm;
         localtime_s(&ltm, &now);
-        char buffer[32];
-        strftime(buffer, sizeof(buffer), "%d/%m/%Y %H:%M:%S", &ltm);
-        logfile << buffer << " - " << input << endl;
-        logfile.flush(); // Принудительная запись буфера в файл
+        logfile << input << endl;
+        logfile.flush(); 
     }
     else {
         cerr << "Unable to open log file." << endl;
     }
 }
-
-class Pipe {
-private:
-    double length;
-    double diameter;
-    bool inRepair;
-    int id;
-
-public:
-    string name;
-
-    Pipe() : name(""), length(0.0), diameter(0.0), inRepair(false) {
-        id = getNextId();
-    }
-
-    double getLength() const {
-        return length;
-    }
-
-    void setLength(double newLength) {
-        length = newLength;
-    }
-
-    void setId(int pipeId) {
-        id = pipeId;
-    }
-
-    double getDiameter() const {
-        return diameter;
-    }
-
-    void setDiameter(double newDiameter) {
-        diameter = newDiameter;
-    }
-
-    void setRepairStatus(bool status) {
-        inRepair = status;
-    }
-
-    bool getInRepair() const {
-        return inRepair;
-    }
-
-    void toggleRepairStatus() {
-        inRepair = !inRepair;
-    }
-
-    int getId() const {
-        return id;
-    }
-
-    static int maxId;
-
-    void readData() {
-        cin.ignore(numeric_limits<streamsize>::max(), '\n');
-        cout << "Enter pipe name: ";
-        getline(cin, name);
-        logInput("User input: " + name);
-
-        while (true) {
-            cout << "Enter pipe length (km): ";
-            if (cin >> length && length >= 0) {
-                logInput("User input: " + to_string(length));
-                break;
-            }
-            else {
-                logInput("User input: " + to_string(length));
-                cout << "Invalid input. Please enter a non-negative number for length." << endl;
-                clearInput();
-            }
-        }
-
-        while (true) {
-            cout << "Enter pipe diameter (cm): ";
-            if (cin >> diameter && diameter >= 0) {
-                logInput("User input: " + to_string(diameter));
-                break;
-            }
-            else {
-                logInput("User input: " + to_string(diameter));
-                cout << "Invalid input. Please enter a non-negative number for diameter." << endl;
-                clearInput();
-            }
-        }
-    }
-
-    void displayData() const {
-        cout << "ID: " << id << endl; 
-        cout << "Name: " << name << endl;
-        cout << "Length: " << length << " km" << endl;
-        cout << "Diameter: " << diameter << " cm" << endl;
-        cout << "Repair status: " << (inRepair ? "Under repair" : "Operational") << endl;
-    }
-    
-
-    static int getNextId() {
-        maxId = maxId + 1;
-        return maxId;
-    }
-};
-
-class CompressorStation {
-private:
-    double efficiency;
-    double nonOperationalPercentage;
-    int id;
-
-public:
-    string name;
-    int workshopCount;
-    vector<bool> workshopStatus;
-
-    CompressorStation() : name(""), workshopCount(0), efficiency(0.0), nonOperationalPercentage(0.0) {
-        id = getNextId();
-    }
-
-    double getEfficiency() const {
-        return efficiency;
-    }
-
-    void setEfficiency(double newEfficiency) {
-        efficiency = newEfficiency;
-    }
-
-    void setId(int stationId) {
-        id = stationId;
-    }
-
-    void setWorkshopCount(int workshopCount) {
-        this->workshopCount = workshopCount;
-    }
-
-    void setWorkshopStatus(int i, bool status) {
-        if (i >= 0 && i < workshopCount) {
-            workshopStatus[i] = status;
-        }
-        else {
-            throw std::out_of_range("Недопустимый индекс цеха");
-        }
-    }
-
-    double getNonOperationalPercentage() const {
-        return nonOperationalPercentage;
-    }
-
-    void setNonOperationalPercentage(double newPercentage) {
-        nonOperationalPercentage = newPercentage;
-    }
-
-    int getId() const {
-        return id;
-    }
-
-    static int maxId;
-
-    void readData() {
-        cin.ignore(numeric_limits<streamsize>::max(), '\n');
-        cout << "Enter station name: ";
-        getline(cin, name);
-        logInput("User input: " + name);
-
-        while (true) {
-            cout << "Enter workshop count: ";
-            if (cin >> workshopCount && workshopCount > 0) {
-                logInput("User input: " + to_string(workshopCount));
-                break;
-            }
-            else {
-                logInput("User input: " + to_string(workshopCount));
-                cout << "Invalid input. Please enter a non-negative integer for workshop count." << endl;
-                clearInput();
-            }
-        }
-
-        while (true) {
-            cout << "Enter the number of operational workshops: ";
-            int operationalWorkshops;
-            if (cin >> operationalWorkshops && operationalWorkshops >= 0 && operationalWorkshops <= workshopCount) {
-                logInput("User input: " + to_string(operationalWorkshops));
-                workshopStatus.resize(workshopCount, false); 
-                for (int i = 0; i < operationalWorkshops; i++) {
-                    workshopStatus[i] = true; 
-                }
-                break;
-            }
-            else {
-                logInput("User input: " + to_string(operationalWorkshops));
-                cout << "Invalid input. Please enter a non-negative integer no greater than workshop count." << endl;
-                clearInput();
-            }
-        }
-
-        while (true) {
-            cout << "Enter efficiency rating: ";
-            if (cin >> efficiency && efficiency >= 0) {
-                logInput("User input: " + to_string(efficiency));
-                break;
-            }
-            else {
-                logInput("User input: " + to_string(efficiency));
-                cout << "Invalid input. Please enter a non-negative number for efficiency rating." << endl;
-                clearInput();
-            }
-        }
-        updateNonOperationalPercentage();
-    }
-
-
-    
-    void displayData() const {
-        cout << "ID: " << id << endl;
-        cout << "Station name: " << name << endl;
-        cout << "Workshop count: " << workshopCount << endl;
-        cout << "Workshop status:" << endl;
-        for (int i = 0; i < workshopCount; i++) {
-            cout << "Workshop " << i + 1 << ": " << (workshopStatus[i] ? "Operational" : "Not operational") << endl;
-        }
-        cout << "Efficiency rating: " << efficiency << endl;
-        cout << "Non-operational workshops: " << nonOperationalPercentage << "%" << endl;
-    }
-
-    void updateNonOperationalPercentage() {
-        int nonOperationalCount = 0;
-        for (bool status : workshopStatus) {
-            if (!status) {
-                nonOperationalCount++;
-            }
-        }
-        nonOperationalPercentage = round((nonOperationalCount * 100.0) / workshopCount);
-    }
-
-
-    static int getNextId() {
-        maxId = maxId + 1;
-        return maxId;
-    }
-};
 
 void showPipes(const vector<Pipe>& pipes) {
     cout << "PIPES:" << endl;
@@ -329,7 +88,7 @@ void addPipeFilter(vector<Pipe>& pipes) {
         string filterName;
         cout << "" << endl;
         cout << "Enter the name for filtering: ";
-        cin.ignore(numeric_limits<streamsize>::max(), '\n'); 
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
         getline(cin, filterName);
         logInput("User input: " + filterName);
 
@@ -681,7 +440,7 @@ void editPipeStatus(vector<Pipe>& pipes) {
             cout << "INVALID ACTION CHOICE. PLEASE TRY AGAIN." << endl;
             break;
         }
-    }
+        }
     }
 }
 
@@ -698,7 +457,7 @@ void editWorkshop(CompressorStation& station) {
     station.workshopStatus[workshopChoice - 1] = !station.workshopStatus[workshopChoice - 1];
     station.updateNonOperationalPercentage();
     cout << "Workshop " << workshopChoice << " status changed to '" << (station.workshopStatus[workshopChoice - 1] ? "Operational" : "Not Operational") << "'" << endl;
-    
+
     double st_percent;
     st_percent = station.getNonOperationalPercentage();
     cout << "Updated non-operational workshop percentage: " << st_percent << "%" << endl;
@@ -930,7 +689,7 @@ void loadData(vector<Pipe>& pipes, vector<CompressorStation>& stations) {
 void deletePipe(vector<Pipe>& pipes, int pipeId) {
     bool found = false;
     for (auto it = pipes.begin(); it != pipes.end(); ++it) {
-        if (it->getId() == pipeId) { 
+        if (it->getId() == pipeId) {
             pipes.erase(it);
             found = true;
             cout << "Pipe with ID " << pipeId << " has been deleted." << endl;
@@ -948,7 +707,7 @@ void deleteCompressorStation(vector<CompressorStation>& stations, int stationId)
     bool found = false;
     for (auto it = stations.begin(); it != stations.end(); ++it) {
         if (it->getId() == stationId) {
-            stations.erase(it); 
+            stations.erase(it);
             found = true;
             cout << "Compressor Station with ID " << stationId << " has been deleted." << endl;
             calculateMaxStationsId(stations);
@@ -999,88 +758,4 @@ void deleteObject(vector<Pipe>& pipes, vector<CompressorStation>& stations) {
     else {
         cout << "Invalid choice. Please try again." << endl;
     }
-}
-
-
-int Pipe::maxId = 0;
-int CompressorStation::maxId = 0;
-
-int main() {
-    vector<Pipe> pipes;
-    vector<CompressorStation> stations;
-
-
-    while (true) {
-        cout << "" << endl;
-        cout << "Menu:" << endl;
-        cout << "1. Add a pipe" << endl;
-        cout << "2. Add a compressor station" << endl;
-        cout << "3. View all objects" << endl;
-        cout << "4. Editing the operation status of pipes" << endl;
-        cout << "5. Starting and stopping workshops" << endl;
-        cout << "6. Save" << endl;
-        cout << "7. Load" << endl;
-        cout << "8. Delete Object" << endl;
-        cout << "0. Exit" << endl;
-        cout << "" << endl;
-
-        int choice;
-        if (!(cin >> choice)) {
-            cout << "Invalid choice. Please try again." << endl;
-            clearInput();
-            continue;
-        }
-        logInput("User input: " + to_string(choice));
-        cout << "" << endl;
-
-        switch (choice) {
-        case 1: {
-            Pipe pipe;
-            pipe.readData();
-            pipes.push_back(pipe);
-            break;
-        }
-        case 2: {
-            CompressorStation station;
-            station.readData();
-            stations.push_back(station);
-            break;
-        }
-        case 3: {
-            showObjectsWithFilters(pipes, stations);
-            break;
-        }
-        case 4: {
-            editPipeStatus(pipes);
-            break;
-        }
-        case 5: {
-            editWorkshopStatus(stations);
-            break;
-        }
-        case 6: {
-            saveData(pipes, stations);
-            break;
-        }
-        case 7: {
-            loadData(pipes, stations);
-            break;
-        }
-        case 8: {
-            deleteObject(pipes, stations);
-            break;
-        }
-        case 0: {
-            cout << "Exiting the program." << endl;
-            return 0;
-        }
-        default: {
-            string action = "Invalid choice entered. Please try again.";
-            cout << action << endl;
-            break;
-        }
-        }
-    }
-
-    return 0;
 }

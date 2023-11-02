@@ -5,6 +5,14 @@ VisualStudioVersion = 17.7.34024.191
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Zaripov_Labs", "Zaripov_Labs.vcxproj", "{80678AA4-3069-4743-895E-6CC20545BA6C}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Элементы решения", "Элементы решения", "{89905391-1D4A-45DE-ABBB-2E1E137FCBFF}"
+	ProjectSection(SolutionItems) = preProject
+		CompressorStation.cpp = CompressorStation.cpp
+		Utils.cpp = Utils.cpp
+		Utils.h = Utils.h
+		..\..\..\..\Desktop\Zaripov_Labs.cpp = ..\..\..\..\Desktop\Zaripov_Labs.cpp
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
