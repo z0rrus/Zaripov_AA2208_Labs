@@ -15,18 +15,55 @@ void clearInput() {
 
 class Pipe {
 private:
-    string name;
     double length;
     double diameter;
     bool inRepair;
     int id;
-    static int maxId;
 
 public:
+    string name;
 
     Pipe() : name(""), length(0.0), diameter(0.0), inRepair(false) {
         id = getNextId();
     }
+
+    double getLength() const {
+        return length;
+    }
+
+    void setLength(double newLength) {
+        length = newLength;
+    }
+
+    void setId(int pipeId) {
+        id = pipeId;
+    }
+
+    double getDiameter() const {
+        return diameter;
+    }
+
+    void setDiameter(double newDiameter) {
+        diameter = newDiameter;
+    }
+
+    void setRepairStatus(bool status) {
+        inRepair = status;
+    }
+
+    bool getInRepair() const {
+        return inRepair;
+    }
+
+    void toggleRepairStatus() {
+        inRepair = !inRepair;
+    }
+
+    int getId() const {
+        return id;
+    }
+
+    static int maxId;
 
     void readData() {
         cin.ignore(numeric_limits<streamsize>::max(), '\n');
@@ -63,10 +100,6 @@ public:
         cout << "Diameter: " << diameter << " cm" << endl;
         cout << "Repair status: " << (inRepair ? "Under repair" : "Operational") << endl;
     }
-
-    void toggleRepairStatus() {
-        inRepair = !inRepair;
-    }
     
 
     static int getNextId() {
@@ -77,19 +110,57 @@ public:
 
 class CompressorStation {
 private:
-    string name;
-    int workshopCount;
-    vector<bool> workshopStatus;
     double efficiency;
     double nonOperationalPercentage;
     int id;
-    static int maxId;
 
 public:
+    string name;
+    int workshopCount;
+    vector<bool> workshopStatus;
 
     CompressorStation() : name(""), workshopCount(0), efficiency(0.0), nonOperationalPercentage(0.0) {
         id = getNextId();
     }
+
+    double getEfficiency() const {
+        return efficiency;
+    }
+
+    void setEfficiency(double newEfficiency) {
+        efficiency = newEfficiency;
+    }
+
+    void setId(int stationId) {
+        id = stationId;
+    }
+
+    void setWorkshopCount(int workshopCount) {
+        this->workshopCount = workshopCount;
+    }
+
+    void setWorkshopStatus(int i, bool status) {
+        if (i >= 0 && i < workshopCount) {
+            workshopStatus[i] = status;
+        }
+        else {
+            throw std::out_of_range("Недопустимый индекс цеха");
+        }
+    }
+
+    double getNonOperationalPercentage() const {
+        return nonOperationalPercentage;
+    }
+
+    void setNonOperationalPercentage(double newPercentage) {
+        nonOperationalPercentage = newPercentage;
+    }
+
+    int getId() const {
+        return id;
+    }
+
+    static int maxId;
 
     void readData() {
         cin.ignore(numeric_limits<streamsize>::max(), '\n');
@@ -231,6 +302,7 @@ void addPipeFilter(vector<Pipe>& pipes) {
         break;
     }
     case 2: {
+        bool in_repair;
         cout << "" << endl;
         cout << "Choose operational status for filtering: 1. Under repair  2. Operational" << endl;
         int statusChoice;
@@ -245,7 +317,8 @@ void addPipeFilter(vector<Pipe>& pipes) {
 
         vector<Pipe> filteredPipes;
         for (const Pipe& pipe : pipes) {
-            if (pipe.inRepair == filterStatus) {
+            in_repair = pipe.getInRepair();
+            if (in_repair == filterStatus) {
                 filteredPipes.push_back(pipe);
             }
         }
@@ -345,13 +418,15 @@ void addStationFilter(vector<CompressorStation>& stations) {
 
         static vector<CompressorStation> filteredStations;
         filteredStations.clear();
+        double st_percentage;
         for (const CompressorStation& station : stations) {
-            if ((comparisonOperator == "<" && station.nonOperationalPercentage < nonOperationalPercentage) ||
-                (comparisonOperator == ">" && station.nonOperationalPercentage > nonOperationalPercentage) ||
-                (comparisonOperator == "<=" && station.nonOperationalPercentage <= nonOperationalPercentage) ||
-                (comparisonOperator == ">=" && station.nonOperationalPercentage >= nonOperationalPercentage) ||
-                (comparisonOperator == "==" && abs(station.nonOperationalPercentage - nonOperationalPercentage) < 0.01) ||
-                (comparisonOperator == "=" && abs(station.nonOperationalPercentage - nonOperationalPercentage) < 0.01)) {
+            st_percentage = station.getNonOperationalPercentage();
+            if ((comparisonOperator == "<" && st_percentage < nonOperationalPercentage) ||
+                (comparisonOperator == ">" && st_percentage > nonOperationalPercentage) ||
+                (comparisonOperator == "<=" && st_percentage <= nonOperationalPercentage) ||
+                (comparisonOperator == ">=" && st_percentage >= nonOperationalPercentage) ||
+                (comparisonOperator == "==" && abs(st_percentage - nonOperationalPercentage) < 0.01) ||
+                (comparisonOperator == "=" && abs(st_percentage - nonOperationalPercentage) < 0.01)) {
                 filteredStations.push_back(station);
             }
         }
@@ -479,10 +554,12 @@ void editPipeStatus(vector<Pipe>& pipes) {
             bool newStatus = (repairChoice == 1);
 
             vector<int> modifiedPipeIds;
+            int pipe_id;
             for (auto& pipe : pipes) {
+                pipe_id = pipe.getId();
                 for (int id : pipeIds) {
-                    if (pipe.id == id) {
-                        pipe.inRepair = newStatus;
+                    if (pipe_id == id) {
+                        pipe.setRepairStatus(newStatus);
                         modifiedPipeIds.push_back(id);
                     }
                 }
@@ -513,13 +590,17 @@ void editPipeStatus(vector<Pipe>& pipes) {
             }
 
             bool newStatus = (repairChoice == 1);
+            bool pipe_id;
+            bool fil_pipe_id;
 
             vector<int> modifiedPipeIds;
             for (auto& pipe : pipes) {
+                pipe_id = pipe.getId();
                 for (auto& filteredPipe : filteredPipes) {
-                    if (pipe.id == filteredPipe.id) {
-                        modifiedPipeIds.push_back(pipe.id);
-                        pipe.inRepair = newStatus;  
+                    fil_pipe_id = filteredPipe.getId();
+                    if (pipe_id == fil_pipe_id) {
+                        modifiedPipeIds.push_back(pipe_id);
+                        pipe.setRepairStatus(newStatus);
                     }
                 }
             }
@@ -565,7 +646,10 @@ void editWorkshop(CompressorStation& station) {
     station.workshopStatus[workshopChoice - 1] = !station.workshopStatus[workshopChoice - 1];
     station.updateNonOperationalPercentage();
     cout << "Workshop " << workshopChoice << " status changed to '" << (station.workshopStatus[workshopChoice - 1] ? "Operational" : "Not Operational") << "'" << endl;
-    cout << "Updated non-operational workshop percentage: " << station.nonOperationalPercentage << "%" << endl;
+    
+    double st_percent;
+    st_percent = station.getNonOperationalPercentage();
+    cout << "Updated non-operational workshop percentage: " << st_percent << "%" << endl;
 }
 
 void editWorkshopStatus(vector<CompressorStation>& stations) {
@@ -584,7 +668,7 @@ void editWorkshopStatus(vector<CompressorStation>& stations) {
         return;
     }
 
-    auto it = find_if(stations.begin(), stations.end(), [stationId](const CompressorStation& s) { return s.id == stationId; });
+    auto it = find_if(stations.begin(), stations.end(), [stationId](const CompressorStation& s) { return s.getId() == stationId; });
     if (it == stations.end()) {
         cout << "Compressor Station with ID " << stationId << " not found." << endl;
         return;
@@ -597,25 +681,26 @@ void editWorkshopStatus(vector<CompressorStation>& stations) {
 
 
 
+
 void savePipe(const Pipe& pipe, ofstream& file) {
     file << "Pipe\n";
-    file << pipe.id << "\n";
+    file << pipe.getId() << "\n";
     file << pipe.name << "\n";
-    file << pipe.length << "\n";
-    file << pipe.diameter << "\n";
-    file << pipe.inRepair << "\n";
+    file << pipe.getLength() << "\n";
+    file << pipe.getDiameter() << "\n";
+    file << pipe.getInRepair() << "\n";
 }
 
 void saveStation(const CompressorStation& station, ofstream& file) {
     file << "Station\n";
-    file << station.id << "\n";
+    file << station.getId() << "\n";
     file << station.name << "\n";
     file << station.workshopCount << "\n";
     for (bool status : station.workshopStatus) {
         file << status << "\n";
     }
-    file << station.efficiency << "\n";
-    file << station.nonOperationalPercentage << "\n";
+    file << station.getEfficiency() << "\n";
+    file << station.getNonOperationalPercentage() << "\n";
 }
 
 void saveData(vector<Pipe>& pipes, vector<CompressorStation>& stations) {
@@ -655,9 +740,11 @@ void saveData(vector<Pipe>& pipes, vector<CompressorStation>& stations) {
 
 void calculateMaxId(const vector<Pipe>& pipes) {
     int maxId = 0;
+    int pipe_id;
     for (const auto& pipe : pipes) {
-        if (pipe.id > maxId) {
-            maxId = pipe.id;
+        pipe_id = pipe.getId();
+        if (pipe_id > maxId) {
+            maxId = pipe_id;
         }
     }
     Pipe::maxId = maxId;
@@ -669,14 +756,18 @@ void loadPipe(ifstream& file, vector<Pipe>& pipes) {
     string temp;
     int id;
     file >> id;
-    pipe.id = id;
-    file.ignore(); 
-    getline(file, pipe.name); 
-    file >> pipe.length;
-    file >> pipe.diameter;
+    pipe.setId(id);
+    file.ignore();
+    getline(file, temp);
+    getline(file, pipe.name);
+    double length, diameter;
+    file >> length;
+    file >> diameter;
+    pipe.setLength(length);
+    pipe.setDiameter(diameter);
     int repairStatus;
     file >> repairStatus;
-    pipe.inRepair = (repairStatus != 0);
+    pipe.setRepairStatus(repairStatus != 0);
     pipes.push_back(pipe);
 
     calculateMaxId(pipes);
@@ -684,9 +775,11 @@ void loadPipe(ifstream& file, vector<Pipe>& pipes) {
 
 void calculateMaxStationsId(const vector<CompressorStation>& stations) {
     int maxId = 0;
+    int st_id;
     for (const auto& station : stations) {
-        if (station.id > maxId) {
-            maxId = station.id;
+        st_id = station.getId();
+        if (st_id > maxId) {
+            maxId = st_id;
         }
     }
     CompressorStation::maxId = maxId;
@@ -694,19 +787,25 @@ void calculateMaxStationsId(const vector<CompressorStation>& stations) {
 
 void loadStation(ifstream& file, vector<CompressorStation>& stations) {
     CompressorStation station;
-    string temp; 
-    file >> station.id;
-    getline(file, temp); 
+    string temp;
+    int id, workshopCount;
+    file >> id;
+    station.setId(id);
+    getline(file, temp);
     getline(file, station.name);
-    file >> station.workshopCount;
-    station.workshopStatus.resize(station.workshopCount);
-    for (int i = 0; i < station.workshopCount; i++) {
+    file >> workshopCount;
+    station.setWorkshopCount(workshopCount);
+    station.workshopStatus.resize(workshopCount);
+    for (int i = 0; i < workshopCount; i++) {
         int status;
         file >> status;
-        station.workshopStatus[i] = static_cast<bool>(status);
+        station.setWorkshopStatus(i, static_cast<bool>(status));
     }
-    file >> station.efficiency;
-    file >> station.nonOperationalPercentage;
+    double efficiency, nonOperationalPercentage;
+    file >> efficiency;
+    file >> nonOperationalPercentage;
+    station.setEfficiency(efficiency);
+    station.setNonOperationalPercentage(nonOperationalPercentage);
     stations.push_back(station);
 
     calculateMaxStationsId(stations);
@@ -714,9 +813,11 @@ void loadStation(ifstream& file, vector<CompressorStation>& stations) {
 
 void updateMaxPipeId(const vector<Pipe>& pipes) {
     int maxId = 0;
+    int pipe_id;
     for (const auto& pipe : pipes) {
-        if (pipe.id > maxId) {
-            maxId = pipe.id;
+        pipe_id = pipe.getId();
+        if (pipe_id > maxId) {
+            maxId = pipe_id;
         }
     }
     Pipe::maxId = maxId;
@@ -725,9 +826,11 @@ void updateMaxPipeId(const vector<Pipe>& pipes) {
 
 void updateMaxStationId(const vector<CompressorStation>& stations) {
     int maxId = 0;
+    int st_id;
     for (const auto& station : stations) {
-        if (station.id > maxId) {
-            maxId = station.id;
+        st_id = station.getId();
+        if (st_id > maxId) {
+            maxId = st_id;
         }
     }
     CompressorStation::maxId = maxId;
@@ -771,8 +874,8 @@ void loadData(vector<Pipe>& pipes, vector<CompressorStation>& stations) {
 void deletePipe(vector<Pipe>& pipes, int pipeId) {
     bool found = false;
     for (auto it = pipes.begin(); it != pipes.end(); ++it) {
-        if (it->id == pipeId) {
-            pipes.erase(it); 
+        if (it->getId() == pipeId) { 
+            pipes.erase(it);
             found = true;
             cout << "Pipe with ID " << pipeId << " has been deleted." << endl;
             calculateMaxId(pipes);
@@ -784,10 +887,11 @@ void deletePipe(vector<Pipe>& pipes, int pipeId) {
     }
 }
 
+
 void deleteCompressorStation(vector<CompressorStation>& stations, int stationId) {
     bool found = false;
     for (auto it = stations.begin(); it != stations.end(); ++it) {
-        if (it->id == stationId) {
+        if (it->getId() == stationId) {
             stations.erase(it); 
             found = true;
             cout << "Compressor Station with ID " << stationId << " has been deleted." << endl;
