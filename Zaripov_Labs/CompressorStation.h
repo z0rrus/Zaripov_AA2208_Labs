@@ -9,6 +9,8 @@ private:
     int id;
     double efficiency;
     double nonOperationalPercentage;
+    void setId(int newId);
+    friend void loadStation(std::ifstream& file, std::vector<CompressorStation>& stations);
 
 public:
     static int maxId;
@@ -22,7 +24,6 @@ public:
     int getWorkshopCount() const;
     double getEfficiency() const;
     double getNonOperationalPercentage() const;
-    void setId(int newId);
     void readData();
     void displayData() const;
     void setWorkshopCount(int newCount);

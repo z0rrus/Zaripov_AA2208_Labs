@@ -2,6 +2,8 @@
 #define PIPE_H
 
 #include <string>
+#include <vector>
+
 
 class Pipe {
 private:
@@ -9,6 +11,8 @@ private:
     double length;
     double diameter;
     bool inRepair;
+    void setId(int newId);
+    friend void loadPipe(std::ifstream& file, std::vector<Pipe>& pipes);
 
 public:
     static int maxId;
@@ -20,7 +24,6 @@ public:
     double getLength() const;
     double getDiameter() const;
     bool getInRepair() const;
-    void setId(int newId);
     void readData();
     void displayData() const;
     void setLength(double newLength);

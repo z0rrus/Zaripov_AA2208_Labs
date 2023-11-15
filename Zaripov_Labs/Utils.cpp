@@ -3,6 +3,7 @@
 #include <fstream>
 #include <vector>
 #include <string>
+#include <unordered_set>  
 #include <ctime>
 
 using namespace std;
@@ -331,22 +332,33 @@ void editPipeStatus(vector<Pipe>& pipes) {
             cout << "Enter the IDs of the pipes to edit (separated by space): ";
             cout << "" << endl;
             vector<int> pipeIds;
-            int pipeId;
+            string pipeId;
             bool validIdFound = false;
-            while (cin >> pipeId) {
-                logInput("User input: " + to_string(pipeId));
-                if (pipeId < 1 || pipeId > Pipe::maxId) {
-                    cout << "Invalid ID " << pipeId << ". Skipping..." << endl;
+            string input;
+            while (std::cin >> pipeId) {
+                input = input + pipeId + " ";
+
+                try {
+                    int id = std::stoi(pipeId);
+                    if (id < 1 || id > Pipe::maxId) {
+                        std::cout << "Invalid ID " << id << ". Skipping..." << std::endl;
+                    }
+                    else {
+                        validIdFound = true;
+                        pipeIds.push_back(id);
+                    }
                 }
-                else {
-                    validIdFound = true;
-                    pipeIds.push_back(pipeId);
+                catch (std::invalid_argument const& ex) {
+                    std::cout << "Invalid ID " << pipeId << ". Skipping..." << std::endl;
                 }
-                if (cin.peek() == '\n') {
+                catch (std::out_of_range const& ex) {
+                    std::cout << "Invalid ID " << pipeId << ". Skipping..." << std::endl;
+                }
+                if (std::cin.peek() == '\n') {
                     break;
                 }
             }
-
+            logInput("User input: " + input);
             if (!validIdFound) {
                 editPipeStatus(filteredPipes);
                 break;
@@ -378,16 +390,22 @@ void editPipeStatus(vector<Pipe>& pipes) {
             filteredPipes = pipes;
 
             if (!modifiedPipeIds.empty()) {
-                cout << "" << endl;
-                cout << "Status of pipes with IDs ";
-                for (size_t i = 0; i < modifiedPipeIds.size(); ++i) {
-                    if (i != 0) {
-                        cout << ", ";
+                std::cout << "\nStatus of pipes with IDs ";
+
+                std::unordered_set<int> uniquePipeIds(modifiedPipeIds.begin(), modifiedPipeIds.end());
+
+                bool first = true;
+                for (const auto& pipeId : uniquePipeIds) {
+                    if (!first) {
+                        std::cout << ", ";
                     }
-                    cout << modifiedPipeIds[i];
+                    std::cout << pipeId;
+                    first = false;
                 }
-                cout << " changed to '" << (newStatus ? "Under repair" : "Operational") << "'" << endl;
+
+                std::cout << " changed to '" << (newStatus ? "Under repair" : "Operational") << "'\n";
             }
+
             return;
         }
         case 2: {
@@ -397,6 +415,7 @@ void editPipeStatus(vector<Pipe>& pipes) {
             if (!(cin >> repairChoice) || (repairChoice != 1 && repairChoice != 2)) {
                 cout << "" << endl;
                 cout << "INVALID ACTION CHOICE. PLEASE TRY AGAIN." << endl;
+                logInput("User input: " + to_string(repairChoice));
                 break;
             }
             logInput("User input: " + to_string(repairChoice));
@@ -476,6 +495,7 @@ void editWorkshopStatus(vector<CompressorStation>& stations) {
     if (!(cin >> stationId)) {
         cout << "Invalid ID. Please try again." << endl;
         clearInput();
+        logInput("User input: " + to_string(stationId));
         return;
     }
     logInput("User input: " + to_string(stationId));
@@ -571,7 +591,6 @@ void loadPipe(ifstream& file, vector<Pipe>& pipes) {
     int id;
     file >> id;
     pipe.setId(id);
-    file.ignore();
     getline(file, temp);
     getline(file, pipe.name);
     double length, diameter;
@@ -583,7 +602,6 @@ void loadPipe(ifstream& file, vector<Pipe>& pipes) {
     file >> repairStatus;
     pipe.setRepairStatus(repairStatus != 0);
     pipes.push_back(pipe);
-
     calculateMaxId(pipes);
 }
 
@@ -621,7 +639,6 @@ void loadStation(ifstream& file, vector<CompressorStation>& stations) {
     station.setEfficiency(efficiency);
     station.setNonOperationalPercentage(nonOperationalPercentage);
     stations.push_back(station);
-
     calculateMaxStationsId(stations);
 }
 

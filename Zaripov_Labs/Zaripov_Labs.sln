@@ -10,7 +10,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Элементы решен
 		CompressorStation.cpp = CompressorStation.cpp
 		Utils.cpp = Utils.cpp
 		Utils.h = Utils.h
-		..\..\..\..\Desktop\Zaripov_Labs.cpp = ..\..\..\..\Desktop\Zaripov_Labs.cpp
 	EndProjectSection
 EndProject
 Global
