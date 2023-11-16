@@ -1,6 +1,7 @@
 #include "Utils.h"
 #include <iostream>
 #include <fstream>
+#include <sstream>
 #include <vector>
 #include <string>
 #include <unordered_set>  
@@ -328,16 +329,22 @@ void editPipeStatus(vector<Pipe>& pipes) {
         logInput("User input: " + to_string(editChoice));
         switch (editChoice) {
         case 1: {
-            cout << "" << endl;
-            cout << "Enter the IDs of the pipes to edit (separated by space): ";
-            cout << "" << endl;
-            vector<int> pipeIds;
-            string pipeId;
-            bool validIdFound = false;
-            string input;
-            while (std::cin >> pipeId) {
-                input = input + pipeId + " ";
+            std::cout << "" << std::endl;
+            std::cout << "Enter the IDs of the pipes to edit (separated by space): ";
+            std::cout << "" << std::endl;
 
+            std::string input;
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            std::getline(std::cin, input);
+            logInput("User input: " + input);
+            
+            std::istringstream iss(input);
+            std::vector<int> pipeIds;
+            std::string pipeId;
+
+            bool validIdFound = false;
+
+            while (iss >> pipeId) {
                 try {
                     int id = std::stoi(pipeId);
                     if (id < 1 || id > Pipe::maxId) {
@@ -348,17 +355,18 @@ void editPipeStatus(vector<Pipe>& pipes) {
                         pipeIds.push_back(id);
                     }
                 }
-                catch (std::invalid_argument const& ex) {
+                catch (std::invalid_argument&) {
                     std::cout << "Invalid ID " << pipeId << ". Skipping..." << std::endl;
                 }
-                catch (std::out_of_range const& ex) {
+                catch (std::out_of_range&) {
                     std::cout << "Invalid ID " << pipeId << ". Skipping..." << std::endl;
-                }
-                if (std::cin.peek() == '\n') {
-                    break;
                 }
             }
-            logInput("User input: " + input);
+
+            if (!validIdFound) {
+                std::cout << "No valid IDs entered. Exiting..." << std::endl;
+                break; 
+            }
             if (!validIdFound) {
                 editPipeStatus(filteredPipes);
                 break;
@@ -751,28 +759,289 @@ void deleteObject(vector<Pipe>& pipes, vector<CompressorStation>& stations) {
     logInput("User input: " + to_string(deleteChoice));
 
     if (deleteChoice == 1) {
-        showPipes(pipes);
-        cout << "Enter the ID of the pipe to delete: ";
-        int pipeId;
-        if (!(cin >> pipeId)) {
-            cout << "Invalid ID. Please try again." << endl;
-            clearInput();
-            return;
+        static vector<Pipe> filteredPipes;
+        filteredPipes = pipes;
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        while (true) {
+            cout << "" << endl;
+            showPipes(filteredPipes);
+            if (filteredPipes.size() < 1) {
+                break;
+            }
+            else {
+                cout << "" << endl;
+                cout << "Choose an option: " << endl;
+                cout << "1. Enter pipes ID for deleting" << endl;
+                cout << "2. Delete all pipes in this list" << endl;
+                cout << "3. Add filter" << endl;
+                cout << "0. Back to main menu (all filters will be reset)" << endl;
+                int editChoice;
+                if (!(cin >> editChoice)) {
+                    cout << "" << endl;
+                    cout << "Invalid choice. Please try again." << endl;
+                    logInput("User input: " + to_string(editChoice));
+                    continue;
+                }
+                logInput("User input: " + to_string(editChoice));
+                switch (editChoice) {
+                case 1: {
+                    std::cout << "" << std::endl;
+                    std::cout << "Enter the IDs of the pipes to delete (separated by space): ";
+                    std::cout << "" << std::endl;
+
+                    std::string input;
+                    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                    std::getline(std::cin, input);
+                    logInput("User input: " + input);
+
+                    std::istringstream iss(input);
+                    std::vector<int> pipeIds;
+                    std::string pipeId;
+
+                    bool validIdFound = false;
+
+                    while (iss >> pipeId) {
+                        try {
+                            int id = std::stoi(pipeId);
+                            if (id < 1 || id > Pipe::maxId) {
+                                std::cout << "Invalid ID " << id << ". Skipping..." << std::endl;
+                            }
+                            else {
+                                validIdFound = true;
+                                pipeIds.push_back(id);
+                            }
+                        }
+                        catch (std::invalid_argument&) {
+                            std::cout << "Invalid ID " << pipeId << ". Skipping..." << std::endl;
+                        }
+                        catch (std::out_of_range&) {
+                            std::cout << "Invalid ID " << pipeId << ". Skipping..." << std::endl;
+                        }
+                    }
+
+                    if (!validIdFound) {
+                        std::cout << "No valid IDs entered. Exiting..." << std::endl;
+                        break;
+                    }
+
+                    cout << "" << endl;
+                    vector<int> modifiedPipeIds;
+                    for (auto it = pipes.begin(); it != pipes.end(); ) {
+                        int pipe_id = it->getId();
+                        if (std::find(pipeIds.begin(), pipeIds.end(), pipe_id) != pipeIds.end()) {
+                            it = pipes.erase(it);
+                            modifiedPipeIds.push_back(pipe_id);
+                        }
+                        else {
+                            ++it;
+                        }
+                    }
+                    filteredPipes = pipes;
+
+                    if (!modifiedPipeIds.empty()) {
+                        std::cout << "\nPipes with IDs ";
+
+                        std::unordered_set<int> uniquePipeIds(modifiedPipeIds.begin(), modifiedPipeIds.end());
+
+                        bool first = true;
+                        for (const auto& pipeId : uniquePipeIds) {
+                            if (!first) {
+                                std::cout << ", ";
+                            }
+                            std::cout << pipeId;
+                            first = false;
+                        }
+
+                        std::cout << " have been deleted." << "\n";
+                    }
+
+                    return;
+                }
+                case 2: {
+                    vector<int> modifiedPipeIds;
+                    for (auto it = pipes.begin(); it != pipes.end(); ) {
+                        int pipe_id = it->getId();
+                        auto foundPipe = std::find_if(filteredPipes.begin(), filteredPipes.end(),
+                            [pipe_id](const auto& filteredPipe) {
+                                return pipe_id == filteredPipe.getId();
+                            });
+                        if (foundPipe != filteredPipes.end()) {
+                            it = pipes.erase(it);
+                            modifiedPipeIds.push_back(pipe_id);
+                        }
+                        else {
+                            ++it;
+                        }
+                    }
+                    filteredPipes = pipes;
+                    cout << "" << endl;
+                    cout << "Pipes with IDs ";
+                    for (size_t i = 0; i < modifiedPipeIds.size(); ++i) {
+                        if (i != 0) {
+                            cout << ", ";
+                        }
+                        cout << modifiedPipeIds[i];
+                    }
+                    cout << " have been deleted." << "\n";
+                    return;
+                }
+                case 3: {
+                    addPipeFilter(filteredPipes);
+                    break;
+                }
+                case 0: {
+                    return;
+                }
+                default: {
+                    cout << "" << endl;
+                    cout << "INVALID ACTION CHOICE. PLEASE TRY AGAIN." << endl;
+                    break;
+                }
+                }
+            }
         }
-        deletePipe(pipes, pipeId);
     }
     else if (deleteChoice == 2) {
-        showStations(stations);
-        cout << "Enter the ID of the compressor station to delete: ";
-        int stationId;
-        if (!(cin >> stationId)) {
-            cout << "Invalid ID. Please try again." << endl;
-            clearInput();
-            return;
+        static vector<CompressorStation> filteredStations;
+        filteredStations = stations;
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        while (true) {
+            cout << "" << endl;
+            showStations(filteredStations);
+            if (filteredStations.size() < 1) {
+                break;
+            }
+            else {
+                cout << "" << endl;
+                cout << "Choose an option: " << endl;
+                cout << "1. Enter stationss ID for deleting" << endl;
+                cout << "2. Delete all stations in this list" << endl;
+                cout << "3. Add filter" << endl;
+                cout << "0. Back to main menu (all filters will be reset)" << endl;
+                int editChoice;
+                if (!(cin >> editChoice)) {
+                    cout << "" << endl;
+                    cout << "Invalid choice. Please try again." << endl;
+                    logInput("User input: " + to_string(editChoice));
+                    continue;
+                }
+                logInput("User input: " + to_string(editChoice));
+                switch (editChoice) {
+                case 1: {
+                    std::cout << "" << std::endl;
+                    std::cout << "Enter the IDs of the stations to delete (separated by space): ";
+                    std::cout << "" << std::endl;
+
+                    std::string input;
+                    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                    std::getline(std::cin, input);
+                    logInput("User input: " + input);
+
+                    std::istringstream iss(input);
+                    std::vector<int> stationIds;
+                    std::string stationId;
+
+                    bool validIdFound = false;
+
+                    while (iss >> stationId) {
+                        try {
+                            int id = std::stoi(stationId);
+                            if (id < 1 || id > CompressorStation::maxId) {
+                                std::cout << "Invalid ID " << id << ". Skipping..." << std::endl;
+                            }
+                            else {
+                                validIdFound = true;
+                                stationIds.push_back(id);
+                            }
+                        }
+                        catch (std::invalid_argument&) {
+                            std::cout << "Invalid ID " << stationId << ". Skipping..." << std::endl;
+                        }
+                        catch (std::out_of_range&) {
+                            std::cout << "Invalid ID " << stationId << ". Skipping..." << std::endl;
+                        }
+                    }
+
+                    if (!validIdFound) {
+                        std::cout << "No valid IDs entered. Exiting..." << std::endl;
+                        break;
+                    }
+
+                    cout << "" << endl;
+                    vector<int> modifiedStationIds;
+                    for (auto it = stations.begin(); it != stations.end(); ) {
+                        int station_id = it->getId();
+                        if (std::find(stationIds.begin(), stationIds.end(), station_id) != stationIds.end()) {
+                            it = stations.erase(it);
+                            modifiedStationIds.push_back(station_id);
+                        }
+                        else {
+                            ++it;
+                        }
+                    }
+                    filteredStations = stations;
+
+                    if (!modifiedStationIds.empty()) {
+                        std::cout << "\nStations with IDs ";
+
+                        std::unordered_set<int> uniqueStationIds(modifiedStationIds.begin(), modifiedStationIds.end());
+
+                        bool first = true;
+                        for (const auto& stationId : uniqueStationIds) {
+                            if (!first) {
+                                std::cout << ", ";
+                            }
+                            std::cout << stationId;
+                            first = false;
+                        }
+
+                        std::cout << " have been deleted." << "\n";
+                    }
+
+                    return;
+                }
+                case 2: {
+                    vector<int> modifiedStationIds;
+                    for (auto it = stations.begin(); it != stations.end(); ) {
+                        int station_id = it->getId();
+                        auto foundStation = std::find_if(filteredStations.begin(), filteredStations.end(),
+                            [station_id](const auto& filteredStation) {
+                                return station_id == filteredStation.getId();
+                            });
+                        if (foundStation != filteredStations.end()) {
+                            it = stations.erase(it);
+                            modifiedStationIds.push_back(station_id);
+                        }
+                        else {
+                            ++it;
+                        }
+                    }
+                    filteredStations = stations;
+                    cout << "" << endl;
+                    cout << "Stations with IDs ";
+                    for (size_t i = 0; i < modifiedStationIds.size(); ++i) {
+                        if (i != 0) {
+                            cout << ", ";
+                        }
+                        cout << modifiedStationIds[i];
+                    }
+                    cout << " have been deleted." << "\n";
+                    return;
+                }
+                case 3: {
+                    addStationFilter(filteredStations);
+                    break;
+                }
+                case 0: {
+                    return;
+                }
+                default: {
+                    cout << "" << endl;
+                    cout << "INVALID ACTION CHOICE. PLEASE TRY AGAIN." << endl;
+                    break;
+                }
+                }
+            }
         }
-        deleteCompressorStation(stations, stationId);
-    }
-    else {
-        cout << "Invalid choice. Please try again." << endl;
-    }
+        }
 }
