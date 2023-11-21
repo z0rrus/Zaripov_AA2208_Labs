@@ -8,18 +8,21 @@
 class Pipe {
 private:
     int id;
+    static int maxId;
     double length;
     double diameter;
     bool inRepair;
     void setId(int newId);
+    static void setMaxId(int NewMaxId);
     friend void loadPipe(std::ifstream& file, std::unordered_map<int, Pipe>& pipes);
+    friend void calculateMaxId(const std::unordered_map<int, Pipe>& pipes);
+    friend void updateMaxPipeId(const std::unordered_map<int, Pipe>& pipes);
 
 public:
-    static int maxId;
     std::string name;
-
     Pipe();
     int getId() const;
+    static int getMaxId();
     std::string getName() const;
     double getLength() const;
     double getDiameter() const;
@@ -29,7 +32,6 @@ public:
     void setLength(double newLength);
     void setDiameter(double newDiameter);
     void setRepairStatus(bool inRepairStatus);
-    static int getNextId();
     void toggleRepairStatus();
 };
 

@@ -7,17 +7,20 @@
 class CompressorStation {
 private:
     int id;
+    static int maxId;
     double efficiency;
     double nonOperationalPercentage;
     void setId(int newId);
+    static void setMaxId(int NewMaxId);
     friend void loadStation(std::ifstream& file, std::unordered_map<int, CompressorStation>& stations);
+    friend void updateMaxStationId(const std::unordered_map<int, CompressorStation>& stations);
+    friend void calculateMaxStationsId(const std::unordered_map<int, CompressorStation>& stations);
 
 public:
-    static int maxId;
     std::string name;
     int workshopCount;
     std::unordered_map<int, bool> workshopStatus;
-
+    static int getMaxId();
     CompressorStation();
     int getId() const;
     std::string getName() const;

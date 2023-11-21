@@ -354,7 +354,7 @@ void editPipeStatus(unordered_map<int, Pipe>& pipes) {
             while (iss >> pipeId) {
                 try {
                     int id = std::stoi(pipeId);
-                    if (id < 1 || id > Pipe::maxId) {
+                    if (id < 1 || id > Pipe::getMaxId()) {
                         std::cout << "Invalid ID " << id << ". Skipping..." << std::endl;
                     }
                     else {
@@ -586,15 +586,15 @@ void saveData(const std::unordered_map<int, Pipe>& pipes, const std::unordered_m
 }
 
 void calculateMaxId(const std::unordered_map<int, Pipe>& pipes) {
-    int maxId = 0;
+    int max_Id = 0;
     for (const auto& pipeEntry : pipes) {
         const Pipe& pipe = pipeEntry.second;
         int pipe_id = pipe.getId();
-        if (pipe_id > maxId) {
-            maxId = pipe_id;
+        if (pipe_id > max_Id) {
+            max_Id = pipe_id;
         }
     }
-    Pipe::maxId = maxId;
+    Pipe::setMaxId(max_Id);
 }
 
 void loadPipe(ifstream& file, unordered_map<int, Pipe>& pipes) {
@@ -627,7 +627,7 @@ void calculateMaxStationsId(const std::unordered_map<int, CompressorStation>& st
             maxId = st_id;
         }
     }
-    CompressorStation::maxId = maxId;
+    CompressorStation::setMaxId(maxId);
 }
 
 void loadStation(ifstream& file, unordered_map<int, CompressorStation>& stations) {
@@ -663,7 +663,7 @@ void updateMaxPipeId(const std::unordered_map<int, Pipe>& pipes) {
             maxId = pipe_id;
         }
     }
-    Pipe::maxId = maxId;
+    Pipe::setMaxId(maxId);
 }
 
 
@@ -676,7 +676,7 @@ void updateMaxStationId(const std::unordered_map<int, CompressorStation>& statio
             maxId = st_id;
         }
     }
-    CompressorStation::maxId = maxId;
+    CompressorStation::setMaxId(maxId);
 }
 
 void loadData(unordered_map<int, Pipe>& pipes, unordered_map<int, CompressorStation>& stations) {
@@ -801,7 +801,7 @@ void deleteObject(unordered_map<int, Pipe>& pipes, unordered_map<int, Compressor
                     while (iss >> pipeId) {
                         try {
                             int id = std::stoi(pipeId);
-                            if (id < 1 || id > Pipe::maxId) {
+                            if (id < 1 || id > Pipe::getMaxId()) {
                                 std::cout << "Invalid ID " << id << ". Skipping..." << std::endl;
                             }
                             else {
@@ -941,7 +941,7 @@ void deleteObject(unordered_map<int, Pipe>& pipes, unordered_map<int, Compressor
                     while (iss >> stationId) {
                         try {
                             int id = std::stoi(stationId);
-                            if (id < 1 || id > CompressorStation::maxId) {
+                            if (id < 1 || id > CompressorStation::getMaxId()) {
                                 std::cout << "Invalid ID " << id << ". Skipping..." << std::endl;
                             }
                             else {

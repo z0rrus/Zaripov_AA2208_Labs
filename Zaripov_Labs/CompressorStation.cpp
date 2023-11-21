@@ -17,6 +17,10 @@ int CompressorStation::getId() const {
     return id;
 }
 
+int CompressorStation::getMaxId() {
+    return maxId;
+}
+
 std::string CompressorStation::getName() const {
     return name;
 }
@@ -38,6 +42,10 @@ void CompressorStation::setId(int newId) {
     if (newId > maxId) {
         maxId = newId;
     }
+}
+
+void CompressorStation::setMaxId(int newMaxId) {
+    maxId = newMaxId;
 }
 
 void CompressorStation::readData() {

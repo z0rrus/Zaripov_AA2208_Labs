@@ -12,6 +12,10 @@ int Pipe::getId() const {
     return id;
 }
 
+int Pipe::getMaxId() {
+    return maxId;
+}
+
 std::string Pipe::getName() const {
     return name;
 }
@@ -33,6 +37,10 @@ void Pipe::setId(int newId) {
         maxId = newId;
     }
     id = newId;
+}
+
+void Pipe::setMaxId(int newMaxId) {
+    maxId = newMaxId;
 }
 
 void Pipe::readData() {
