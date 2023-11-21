@@ -2,6 +2,7 @@
 #include <fstream>
 #include <string>
 #include <limits>
+#include <unordered_map>
 #include <algorithm>
 #include "Pipe.h"
 #include "CompressorStation.h"
@@ -9,8 +10,8 @@
 
 
 int main() {
-    std::vector<Pipe> pipes;
-    std::vector<CompressorStation> stations;
+    std::unordered_map<int, Pipe> pipes;
+    std::unordered_map<int, CompressorStation> stations;
 
     while (true) {
         std::cout << std::endl;
@@ -32,20 +33,20 @@ int main() {
             clearInput();
             continue;
         }
-        logInput("User input: " + std::to_string(choice));
+        logInput(std::to_string(choice));
         std::cout << std::endl;
 
         switch (choice) {
         case 1: {
             Pipe pipe;
             pipe.readData();
-            pipes.push_back(pipe);
+            pipes.insert(std::make_pair(pipes.size() + 1, pipe));
             break;
         }
         case 2: {
             CompressorStation station;
             station.readData();
-            stations.push_back(station);
+            stations.insert(std::make_pair(stations.size() + 1, station));
             break;
         }
         case 3: {

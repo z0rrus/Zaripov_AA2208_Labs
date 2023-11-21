@@ -2,7 +2,7 @@
 #define COMPRESSORSTATION_H
 
 #include <string>
-#include <vector>
+#include <unordered_map>
 
 class CompressorStation {
 private:
@@ -10,13 +10,13 @@ private:
     double efficiency;
     double nonOperationalPercentage;
     void setId(int newId);
-    friend void loadStation(std::ifstream& file, std::vector<CompressorStation>& stations);
+    friend void loadStation(std::ifstream& file, std::unordered_map<int, CompressorStation>& stations);
 
 public:
     static int maxId;
     std::string name;
     int workshopCount;
-    std::vector<bool> workshopStatus;
+    std::unordered_map<int, bool> workshopStatus;
 
     CompressorStation();
     int getId() const;

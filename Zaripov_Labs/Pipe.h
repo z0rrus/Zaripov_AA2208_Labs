@@ -2,7 +2,7 @@
 #define PIPE_H
 
 #include <string>
-#include <vector>
+#include <unordered_map>
 
 
 class Pipe {
@@ -12,7 +12,7 @@ private:
     double diameter;
     bool inRepair;
     void setId(int newId);
-    friend void loadPipe(std::ifstream& file, std::vector<Pipe>& pipes);
+    friend void loadPipe(std::ifstream& file, std::unordered_map<int, Pipe>& pipes);
 
 public:
     static int maxId;

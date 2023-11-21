@@ -2,7 +2,9 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
-#include <vector>
+#include <algorithm>
+#include <unordered_map>
+#include <unordered_map>
 #include <string>
 #include <unordered_set>  
 #include <ctime>
@@ -39,37 +41,40 @@ void logInput(const string& input) {
     }
 }
 
-void showPipes(const vector<Pipe>& pipes) {
-    cout << "PIPES:" << endl;
-    cout << "" << endl;
+void showPipes(const std::unordered_map<int, Pipe>& pipes) {
+    std::cout << "PIPES:" << std::endl;
+    std::cout << std::endl;
+
     if (pipes.empty()) {
-        cout << "There are no pipes." << endl;
-        cout << "" << endl;
+        std::cout << "There are no pipes." << std::endl;
+        std::cout << std::endl;
     }
     else {
-        for (const Pipe& pipe : pipes) {
+        for (const auto& pipeEntry : pipes) {
+            const Pipe& pipe = pipeEntry.second; 
             pipe.displayData();
-            cout << endl;
+            std::cout << std::endl;
         }
     }
 }
 
-void showStations(const vector<CompressorStation>& stations) {
-    cout << "COMPRESSOR STATIONS:" << endl;
-    cout << "" << endl;
+void showStations(const std::unordered_map<int, CompressorStation>& stations) {
+    std::cout << "COMPRESSOR STATIONS:" << std::endl;
+    std::cout << std::endl;
     if (stations.empty()) {
-        cout << "There are no compressor stations." << endl;
-        cout << "" << endl;
+        std::cout << "There are no compressor stations." << std::endl;
+        std::cout << std::endl;
     }
     else {
-        for (const CompressorStation& station : stations) {
+        for (const auto& stationEntry : stations) {
+            const CompressorStation& station = stationEntry.second;
             station.displayData();
-            cout << endl;
+            std::cout << std::endl;
         }
     }
 }
 
-void addPipeFilter(vector<Pipe>& pipes) {
+void addPipeFilter(unordered_map<int, Pipe>& pipes) {
     cout << "" << endl;
     cout << "Choose filter option:" << endl;
     cout << "1. Add filter by name" << endl;
@@ -83,7 +88,7 @@ void addPipeFilter(vector<Pipe>& pipes) {
         clearInput();
         return;
     }
-    logInput("User input: " + to_string(filterChoice));
+    logInput(to_string(filterChoice));
 
     switch (filterChoice) {
     case 1: {
@@ -92,12 +97,13 @@ void addPipeFilter(vector<Pipe>& pipes) {
         cout << "Enter the name for filtering: ";
         cin.ignore(numeric_limits<streamsize>::max(), '\n');
         getline(cin, filterName);
-        logInput("User input: " + filterName);
+        logInput(filterName);
 
-        vector<Pipe> filteredPipes;
-        for (const Pipe& pipe : pipes) {
-            if (pipe.name.find(filterName) != string::npos) {
-                filteredPipes.push_back(pipe);
+        unordered_map<int, Pipe> filteredPipes;
+        for (const auto& pipeEntry : pipes) {
+            const Pipe& pipe = pipeEntry.second;
+            if (pipe.name.find(filterName) != std::string::npos) {
+                filteredPipes.emplace(pipeEntry.first, pipe);
             }
         }
         pipes = filteredPipes;
@@ -105,7 +111,6 @@ void addPipeFilter(vector<Pipe>& pipes) {
         break;
     }
     case 2: {
-        bool in_repair;
         cout << "" << endl;
         cout << "Choose operational status for filtering: 1. Under repair  2. Operational" << endl;
         int statusChoice;
@@ -113,18 +118,19 @@ void addPipeFilter(vector<Pipe>& pipes) {
             cout << "" << endl;
             cout << "Invalid choice. Please try again." << endl;
             clearInput();
-            logInput("User input: " + to_string(statusChoice));
+            logInput(to_string(statusChoice));
             return;
         }
-        logInput("User input: " + to_string(statusChoice));
+        logInput(to_string(statusChoice));
 
         bool filterStatus = (statusChoice == 1);
 
-        vector<Pipe> filteredPipes;
-        for (const Pipe& pipe : pipes) {
-            in_repair = pipe.getInRepair();
-            if (in_repair == filterStatus) {
-                filteredPipes.push_back(pipe);
+        unordered_map<int, Pipe> filteredPipes;
+        for (const auto& pipeEntry : pipes) {
+            const Pipe& pipe = pipeEntry.second;
+            bool inRepair = pipe.getInRepair();
+            if (inRepair == filterStatus) {
+                filteredPipes.emplace(pipeEntry.first, pipe);
             }
         }
         pipes = filteredPipes;
@@ -143,7 +149,7 @@ void addPipeFilter(vector<Pipe>& pipes) {
     }
 }
 
-void addStationFilter(vector<CompressorStation>& stations) {
+void addStationFilter(unordered_map<int, CompressorStation>& stations) {
     cout << "" << endl;
     cout << "Choose filter option:" << endl;
     cout << "1. Add filter by station name" << endl;
@@ -157,7 +163,7 @@ void addStationFilter(vector<CompressorStation>& stations) {
         clearInput();
         return;
     }
-    logInput("User input: " + to_string(filterChoice));
+    logInput(to_string(filterChoice));
 
     switch (filterChoice) {
     case 1: {
@@ -166,12 +172,13 @@ void addStationFilter(vector<CompressorStation>& stations) {
         cout << "Enter the name for filtering: ";
         cin.ignore(numeric_limits<streamsize>::max(), '\n');
         getline(cin, filterName);
-        logInput("User input: " + filterName);
+        logInput(filterName);
 
-        static vector<CompressorStation> filteredStations;
-        for (const CompressorStation& station : stations) {
-            if (station.name.find(filterName) != string::npos) {
-                filteredStations.push_back(station);
+        static unordered_map<int, CompressorStation> filteredStations;
+        for (const auto& stationEntry : stations) {
+            const CompressorStation& station = stationEntry.second;
+            if (station.name.find(filterName) != std::string::npos) {
+                filteredStations.emplace(station.getId(), station);
             }
         }
         stations = filteredStations;
@@ -186,7 +193,7 @@ void addStationFilter(vector<CompressorStation>& stations) {
 
         string comparisonOperator;
         double nonOperationalPercentage;
-        logInput("User input: " + input);
+        logInput(input);
 
 
         if (input.find_first_not_of("0123456789.") == string::npos) {
@@ -225,18 +232,18 @@ void addStationFilter(vector<CompressorStation>& stations) {
             return;
         }
 
-        static vector<CompressorStation> filteredStations;
+        static unordered_map<int, CompressorStation> filteredStations;
         filteredStations.clear();
-        double st_percentage;
-        for (const CompressorStation& station : stations) {
-            st_percentage = station.getNonOperationalPercentage();
+        for (const auto& stationEntry : stations) {
+            const CompressorStation& station = stationEntry.second;
+            double st_percentage = station.getNonOperationalPercentage();
             if ((comparisonOperator == "<" && st_percentage < nonOperationalPercentage) ||
                 (comparisonOperator == ">" && st_percentage > nonOperationalPercentage) ||
                 (comparisonOperator == "<=" && st_percentage <= nonOperationalPercentage) ||
                 (comparisonOperator == ">=" && st_percentage >= nonOperationalPercentage) ||
-                (comparisonOperator == "==" && abs(st_percentage - nonOperationalPercentage) < 0.01) ||
-                (comparisonOperator == "=" && abs(st_percentage - nonOperationalPercentage) < 0.01)) {
-                filteredStations.push_back(station);
+                (comparisonOperator == "==" && std::abs(st_percentage - nonOperationalPercentage) < 0.01) ||
+                (comparisonOperator == "=" && std::abs(st_percentage - nonOperationalPercentage) < 0.01)) {
+                filteredStations.emplace(station.getId(), station);
             }
         }
         stations = filteredStations;
@@ -256,10 +263,10 @@ void addStationFilter(vector<CompressorStation>& stations) {
 }
 
 
-void showObjectsWithFilters(vector<Pipe>& pipes, vector<CompressorStation>& stations) {
-    static vector<CompressorStation> filteredStations;
+void showObjectsWithFilters(const std::unordered_map<int, Pipe>& pipes, const std::unordered_map<int, CompressorStation>& stations) {
+    static unordered_map<int, CompressorStation> filteredStations;
     filteredStations = stations;
-    static vector<Pipe> filteredPipes;
+    static unordered_map<int, Pipe> filteredPipes;
     filteredPipes = pipes;
     while (true) {
         cout << "" << endl;
@@ -275,10 +282,10 @@ void showObjectsWithFilters(vector<Pipe>& pipes, vector<CompressorStation>& stat
             cout << "" << endl;
             cout << "Invalid choice. Please try again." << endl;
             clearInput();
-            logInput("User input: " + to_string(choice));
+            logInput(to_string(choice));
             continue;
         }
-        logInput("User input: " + to_string(choice));
+        logInput(to_string(choice));
         switch (choice) {
         case 1: {
             addPipeFilter(filteredPipes);
@@ -301,13 +308,13 @@ void showObjectsWithFilters(vector<Pipe>& pipes, vector<CompressorStation>& stat
 }
 
 
-void editPipeStatus(vector<Pipe>& pipes) {
+void editPipeStatus(unordered_map<int, Pipe>& pipes) {
     if (pipes.empty()) {
         cout << "There are no pipes." << endl;
         return;
     }
 
-    static vector<Pipe> filteredPipes;
+    static unordered_map<int, Pipe> filteredPipes;
     filteredPipes = pipes;
     cin.ignore(numeric_limits<streamsize>::max(), '\n');
     while (true) {
@@ -323,10 +330,10 @@ void editPipeStatus(vector<Pipe>& pipes) {
         if (!(cin >> editChoice)) {
             cout << "" << endl;
             cout << "Invalid choice. Please try again." << endl;
-            logInput("User input: " + to_string(editChoice));
+            logInput(to_string(editChoice));
             continue;
         }
-        logInput("User input: " + to_string(editChoice));
+        logInput(to_string(editChoice));
         switch (editChoice) {
         case 1: {
             std::cout << "" << std::endl;
@@ -336,10 +343,10 @@ void editPipeStatus(vector<Pipe>& pipes) {
             std::string input;
             cin.ignore(numeric_limits<streamsize>::max(), '\n');
             std::getline(std::cin, input);
-            logInput("User input: " + input);
+            logInput(input);
             
             std::istringstream iss(input);
-            std::vector<int> pipeIds;
+            std::unordered_map<int, bool> pipeIds;
             std::string pipeId;
 
             bool validIdFound = false;
@@ -352,7 +359,7 @@ void editPipeStatus(vector<Pipe>& pipes) {
                     }
                     else {
                         validIdFound = true;
-                        pipeIds.push_back(id);
+                        pipeIds.emplace(id, true);
                     }
                 }
                 catch (std::invalid_argument&) {
@@ -378,36 +385,32 @@ void editPipeStatus(vector<Pipe>& pipes) {
             if (!(cin >> repairChoice) || (repairChoice != 1 && repairChoice != 2)) {
                 cout << "" << endl;
                 cout << "INVALID ACTION CHOICE. PLEASE TRY AGAIN." << endl;
-                logInput("User input: " + to_string(repairChoice));
+                logInput(to_string(repairChoice));
                 break;
             }
-            logInput("User input: " + to_string(repairChoice));
+            logInput(to_string(repairChoice));
             bool newStatus = (repairChoice == 1);
 
-            vector<int> modifiedPipeIds;
-            int pipe_id;
-            for (auto& pipe : pipes) {
-                pipe_id = pipe.getId();
-                for (int id : pipeIds) {
-                    if (pipe_id == id) {
-                        pipe.setRepairStatus(newStatus);
-                        modifiedPipeIds.push_back(id);
-                    }
+            unordered_map<int, bool> modifiedPipeIds;
+            for (auto it = pipes.begin(); it != pipes.end(); ++it) {
+                const Pipe& pipe = it->second;
+                int pipe_id = pipe.getId();
+                auto idIt = pipeIds.find(pipe_id);
+                if (idIt != pipeIds.end()) {
+                    pipes[pipe_id].setRepairStatus(newStatus);
+                    modifiedPipeIds.emplace(pipe_id, newStatus);
                 }
             }
             filteredPipes = pipes;
 
             if (!modifiedPipeIds.empty()) {
                 std::cout << "\nStatus of pipes with IDs ";
-
-                std::unordered_set<int> uniquePipeIds(modifiedPipeIds.begin(), modifiedPipeIds.end());
-
                 bool first = true;
-                for (const auto& pipeId : uniquePipeIds) {
+                for (const auto& pipeId : modifiedPipeIds) {
                     if (!first) {
                         std::cout << ", ";
                     }
-                    std::cout << pipeId;
+                    std::cout << pipeId.first;  
                     first = false;
                 }
 
@@ -423,30 +426,27 @@ void editPipeStatus(vector<Pipe>& pipes) {
             if (!(cin >> repairChoice) || (repairChoice != 1 && repairChoice != 2)) {
                 cout << "" << endl;
                 cout << "INVALID ACTION CHOICE. PLEASE TRY AGAIN." << endl;
-                logInput("User input: " + to_string(repairChoice));
+                logInput(to_string(repairChoice));
                 break;
             }
-            logInput("User input: " + to_string(repairChoice));
+            logInput(to_string(repairChoice));
 
             bool newStatus = (repairChoice == 1);
-            bool pipe_id;
-            bool fil_pipe_id;
 
-            vector<int> modifiedPipeIds;
-            for (auto& pipe : pipes) {
-                pipe_id = pipe.getId();
-                for (auto& filteredPipe : filteredPipes) {
-                    fil_pipe_id = filteredPipe.getId();
-                    if (pipe_id == fil_pipe_id) {
-                        modifiedPipeIds.push_back(pipe_id);
-                        pipe.setRepairStatus(newStatus);
-                    }
+            unordered_map<int, bool> modifiedPipeIds;
+            for (auto& pipeEntry : pipes) {
+                int pipe_id = pipeEntry.first;
+                Pipe& pipe = pipeEntry.second;
+                auto filteredPipeIt = filteredPipes.find(pipe_id);
+                if (filteredPipeIt != filteredPipes.end()) {
+                    modifiedPipeIds.emplace(pipe_id, newStatus);
+                    pipe.setRepairStatus(newStatus);
                 }
             }
             filteredPipes = pipes;
             cout << "" << endl;
             cout << "Status of pipes with IDs ";
-            for (size_t i = 0; i < modifiedPipeIds.size(); ++i) {
+            for (auto i = 0u; i < modifiedPipeIds.size(); ++i) {
                 if (i != 0) {
                     cout << ", ";
                 }
@@ -479,7 +479,7 @@ void editWorkshop(CompressorStation& station) {
         clearInput();
         return;
     }
-    logInput("User input: " + to_string(workshopChoice));
+    logInput(to_string(workshopChoice));
 
     station.workshopStatus[workshopChoice - 1] = !station.workshopStatus[workshopChoice - 1];
     station.updateNonOperationalPercentage();
@@ -490,36 +490,39 @@ void editWorkshop(CompressorStation& station) {
     cout << "Updated non-operational workshop percentage: " << st_percent << "%" << endl;
 }
 
-void editWorkshopStatus(vector<CompressorStation>& stations) {
+void editWorkshopStatus(std::unordered_map<int, CompressorStation>& stations) {
     if (stations.empty()) {
-        cout << "No compressor stations added to the database." << endl;
+        std::cout << "No compressor stations added to the database." << std::endl;
         return;
     }
 
-    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
     showStations(stations);
-    cout << "Enter the ID of the compressor station to edit: ";
+    std::cout << "Enter the ID of the compressor station to edit: ";
     int stationId;
-    if (!(cin >> stationId)) {
-        cout << "Invalid ID. Please try again." << endl;
+    if (!(std::cin >> stationId)) {
+        std::cout << "Invalid ID. Please try again." << std::endl;
         clearInput();
-        logInput("User input: " + to_string(stationId));
+        logInput(std::to_string(stationId));
         return;
     }
-    logInput("User input: " + to_string(stationId));
+    logInput(std::to_string(stationId));
 
-    auto it = find_if(stations.begin(), stations.end(), [stationId](const CompressorStation& s) { return s.getId() == stationId; });
+    auto it = std::find_if(
+        stations.begin(),
+        stations.end(),
+        [stationId](const std::pair<int, CompressorStation>& pair) { return pair.second.getId() == stationId; }
+    );
+
     if (it == stations.end()) {
-        cout << "Compressor Station with ID " << stationId << " not found." << endl;
+        std::cout << "Compressor Station with ID " << stationId << " not found." << std::endl;
         return;
     }
 
-    CompressorStation& station = *it;
+    CompressorStation& station = it->second;
 
     editWorkshop(station);
 }
-
-
 
 
 void savePipe(const Pipe& pipe, ofstream& file) {
@@ -536,19 +539,19 @@ void saveStation(const CompressorStation& station, ofstream& file) {
     file << station.getId() << "\n";
     file << station.name << "\n";
     file << station.workshopCount << "\n";
-    for (bool status : station.workshopStatus) {
-        file << status << "\n";
+    for (const auto& statusEntry : station.workshopStatus) {
+        file << statusEntry.second << "\n";
     }
     file << station.getEfficiency() << "\n";
     file << station.getNonOperationalPercentage() << "\n";
 }
 
-void saveData(vector<Pipe>& pipes, vector<CompressorStation>& stations) {
+void saveData(const std::unordered_map<int, Pipe>& pipes, const std::unordered_map<int, CompressorStation>& stations) {
     cout << "Enter the filename for saving: ";
     cin.ignore(numeric_limits<streamsize>::max(), '\n');
     string filename;
     getline(cin, filename);
-    logInput("User input: " + filename);
+    logInput(filename);
     filename = filename + ".txt";
 
     ifstream fileExists(filename);
@@ -556,7 +559,7 @@ void saveData(vector<Pipe>& pipes, vector<CompressorStation>& stations) {
         cout << "A file with the name '" << filename << "' already exists. Its data will be overwritten. Are you sure? (Y/N) ";
         char choice;
         cin >> choice;
-        logInput("User input: " + to_string(choice));
+        logInput(to_string(choice));
         if (choice != 'Y' && choice != 'y') {
             cout << "Cancelled. Data not saved." << endl;
             return;
@@ -566,25 +569,27 @@ void saveData(vector<Pipe>& pipes, vector<CompressorStation>& stations) {
     ofstream file(filename);
 
     if (file.is_open()) {
-        for (const Pipe& pipe : pipes) {
+        for (const auto& pipeEntry : pipes) {
+            const Pipe& pipe = pipeEntry.second;
             savePipe(pipe, file);
         }
-        for (const CompressorStation& station : stations) {
+        for (const auto& stationEntry : stations) {
+            const CompressorStation& station = stationEntry.second;
             saveStation(station, file);
         }
         file.close();
-        cout << "Data successfully saved to the file " << filename << endl;
+        std::cout << "Data successfully saved to the file " << filename << std::endl;
     }
     else {
-        cout << "Error opening the file for saving." << endl;
+        std::cout << "Error opening the file for saving." << std::endl;
     }
 }
 
-void calculateMaxId(const vector<Pipe>& pipes) {
+void calculateMaxId(const std::unordered_map<int, Pipe>& pipes) {
     int maxId = 0;
-    int pipe_id;
-    for (const auto& pipe : pipes) {
-        pipe_id = pipe.getId();
+    for (const auto& pipeEntry : pipes) {
+        const Pipe& pipe = pipeEntry.second;
+        int pipe_id = pipe.getId();
         if (pipe_id > maxId) {
             maxId = pipe_id;
         }
@@ -592,7 +597,7 @@ void calculateMaxId(const vector<Pipe>& pipes) {
     Pipe::maxId = maxId;
 }
 
-void loadPipe(ifstream& file, vector<Pipe>& pipes) {
+void loadPipe(ifstream& file, unordered_map<int, Pipe>& pipes) {
     string line;
     Pipe pipe;
     string temp;
@@ -609,15 +614,15 @@ void loadPipe(ifstream& file, vector<Pipe>& pipes) {
     int repairStatus;
     file >> repairStatus;
     pipe.setRepairStatus(repairStatus != 0);
-    pipes.push_back(pipe);
+    pipes.emplace(id, pipe);
     calculateMaxId(pipes);
 }
 
-void calculateMaxStationsId(const vector<CompressorStation>& stations) {
+void calculateMaxStationsId(const std::unordered_map<int, CompressorStation>& stations) {
     int maxId = 0;
-    int st_id;
-    for (const auto& station : stations) {
-        st_id = station.getId();
+    for (const auto& stationEntry : stations) {
+        const CompressorStation& station = stationEntry.second;
+        int st_id = station.getId();
         if (st_id > maxId) {
             maxId = st_id;
         }
@@ -625,7 +630,7 @@ void calculateMaxStationsId(const vector<CompressorStation>& stations) {
     CompressorStation::maxId = maxId;
 }
 
-void loadStation(ifstream& file, vector<CompressorStation>& stations) {
+void loadStation(ifstream& file, unordered_map<int, CompressorStation>& stations) {
     CompressorStation station;
     string temp;
     int id, workshopCount;
@@ -635,7 +640,6 @@ void loadStation(ifstream& file, vector<CompressorStation>& stations) {
     getline(file, station.name);
     file >> workshopCount;
     station.setWorkshopCount(workshopCount);
-    station.workshopStatus.resize(workshopCount);
     for (int i = 0; i < workshopCount; i++) {
         int status;
         file >> status;
@@ -646,15 +650,15 @@ void loadStation(ifstream& file, vector<CompressorStation>& stations) {
     file >> nonOperationalPercentage;
     station.setEfficiency(efficiency);
     station.setNonOperationalPercentage(nonOperationalPercentage);
-    stations.push_back(station);
+    stations.emplace(id, station);
     calculateMaxStationsId(stations);
 }
 
-void updateMaxPipeId(const vector<Pipe>& pipes) {
+void updateMaxPipeId(const std::unordered_map<int, Pipe>& pipes) {
     int maxId = 0;
-    int pipe_id;
-    for (const auto& pipe : pipes) {
-        pipe_id = pipe.getId();
+    for (const auto& pipeEntry : pipes) {
+        const Pipe& pipe = pipeEntry.second;
+        int pipe_id = pipe.getId();
         if (pipe_id > maxId) {
             maxId = pipe_id;
         }
@@ -663,11 +667,11 @@ void updateMaxPipeId(const vector<Pipe>& pipes) {
 }
 
 
-void updateMaxStationId(const vector<CompressorStation>& stations) {
+void updateMaxStationId(const std::unordered_map<int, CompressorStation>& stations) {
     int maxId = 0;
-    int st_id;
-    for (const auto& station : stations) {
-        st_id = station.getId();
+    for (const auto& stationEntry : stations) {
+        const CompressorStation& station = stationEntry.second;
+        int st_id = station.getId();
         if (st_id > maxId) {
             maxId = st_id;
         }
@@ -675,12 +679,12 @@ void updateMaxStationId(const vector<CompressorStation>& stations) {
     CompressorStation::maxId = maxId;
 }
 
-void loadData(vector<Pipe>& pipes, vector<CompressorStation>& stations) {
+void loadData(unordered_map<int, Pipe>& pipes, unordered_map<int, CompressorStation>& stations) {
     cout << "Enter the filename to load: ";
     cin.ignore(numeric_limits<streamsize>::max(), '\n');
     string filename;
     getline(cin, filename);
-    logInput("User input: " + filename);
+    logInput(filename);
     filename = filename + ".txt";
 
     ifstream file(filename);
@@ -711,41 +715,35 @@ void loadData(vector<Pipe>& pipes, vector<CompressorStation>& stations) {
 
 
 
-void deletePipe(vector<Pipe>& pipes, int pipeId) {
-    bool found = false;
-    for (auto it = pipes.begin(); it != pipes.end(); ++it) {
-        if (it->getId() == pipeId) {
-            pipes.erase(it);
-            found = true;
-            cout << "Pipe with ID " << pipeId << " has been deleted." << endl;
-            calculateMaxId(pipes);
-            break;
-        }
+void deletePipe(std::unordered_map<int, Pipe>& pipes, int pipeId) {
+    auto it = pipes.find(pipeId);
+
+    if (it != pipes.end()) {
+        pipes.erase(it);
+        std::cout << "Pipe with ID " << pipeId << " has been deleted." << std::endl;
+        calculateMaxId(pipes);
     }
-    if (!found) {
-        cout << "Pipe with ID " << pipeId << " not found." << endl;
+    else {
+        std::cout << "Pipe with ID " << pipeId << " not found." << std::endl;
     }
 }
 
 
-void deleteCompressorStation(vector<CompressorStation>& stations, int stationId) {
-    bool found = false;
-    for (auto it = stations.begin(); it != stations.end(); ++it) {
-        if (it->getId() == stationId) {
-            stations.erase(it);
-            found = true;
-            cout << "Compressor Station with ID " << stationId << " has been deleted." << endl;
-            calculateMaxStationsId(stations);
-            break;
-        }
+void deleteCompressorStation(std::unordered_map<int, CompressorStation>& stations, int stationId) {
+    auto it = stations.find(stationId);
+
+    if (it != stations.end()) {
+        stations.erase(it);
+        std::cout << "Compressor Station with ID " << stationId << " has been deleted." << std::endl;
+        calculateMaxStationsId(stations);
     }
-    if (!found) {
-        cout << "Compressor Station with ID " << stationId << " not found." << endl;
+    else {
+        std::cout << "Compressor Station with ID " << stationId << " not found." << std::endl;
     }
 }
 
 
-void deleteObject(vector<Pipe>& pipes, vector<CompressorStation>& stations) {
+void deleteObject(unordered_map<int, Pipe>& pipes, unordered_map<int, CompressorStation>& stations) {
     cout << "What do you want to delete?" << endl;
     cout << "1. Pipe" << endl;
     cout << "2. Compressor Station" << endl;
@@ -753,13 +751,13 @@ void deleteObject(vector<Pipe>& pipes, vector<CompressorStation>& stations) {
     if (!(cin >> deleteChoice)) {
         cout << "Invalid choice. Please try again." << endl;
         clearInput();
-        logInput("User input: " + to_string(deleteChoice));
+        logInput(to_string(deleteChoice));
         return;
     }
-    logInput("User input: " + to_string(deleteChoice));
+    logInput(to_string(deleteChoice));
 
     if (deleteChoice == 1) {
-        static vector<Pipe> filteredPipes;
+        static unordered_map<int, Pipe> filteredPipes;
         filteredPipes = pipes;
         cin.ignore(numeric_limits<streamsize>::max(), '\n');
         while (true) {
@@ -779,10 +777,10 @@ void deleteObject(vector<Pipe>& pipes, vector<CompressorStation>& stations) {
                 if (!(cin >> editChoice)) {
                     cout << "" << endl;
                     cout << "Invalid choice. Please try again." << endl;
-                    logInput("User input: " + to_string(editChoice));
+                    logInput(to_string(editChoice));
                     continue;
                 }
-                logInput("User input: " + to_string(editChoice));
+                logInput(to_string(editChoice));
                 switch (editChoice) {
                 case 1: {
                     std::cout << "" << std::endl;
@@ -792,10 +790,10 @@ void deleteObject(vector<Pipe>& pipes, vector<CompressorStation>& stations) {
                     std::string input;
                     cin.ignore(numeric_limits<streamsize>::max(), '\n');
                     std::getline(std::cin, input);
-                    logInput("User input: " + input);
+                    logInput(input);
 
                     std::istringstream iss(input);
-                    std::vector<int> pipeIds;
+                    std::unordered_map<int, bool> pipeIds;
                     std::string pipeId;
 
                     bool validIdFound = false;
@@ -808,7 +806,7 @@ void deleteObject(vector<Pipe>& pipes, vector<CompressorStation>& stations) {
                             }
                             else {
                                 validIdFound = true;
-                                pipeIds.push_back(id);
+                                pipeIds.emplace(id, true);
                             }
                         }
                         catch (std::invalid_argument&) {
@@ -825,12 +823,13 @@ void deleteObject(vector<Pipe>& pipes, vector<CompressorStation>& stations) {
                     }
 
                     cout << "" << endl;
-                    vector<int> modifiedPipeIds;
-                    for (auto it = pipes.begin(); it != pipes.end(); ) {
-                        int pipe_id = it->getId();
-                        if (std::find(pipeIds.begin(), pipeIds.end(), pipe_id) != pipeIds.end()) {
+                    unordered_map<int, bool> modifiedPipeIds;
+                    for (auto it = pipes.begin(); it != pipes.end();) {
+                        int pipe_id = it->second.getId();
+
+                        if (pipeIds.find(pipe_id) != pipeIds.end()) {
                             it = pipes.erase(it);
-                            modifiedPipeIds.push_back(pipe_id);
+                            modifiedPipeIds.emplace(pipe_id, true);
                         }
                         else {
                             ++it;
@@ -840,15 +839,12 @@ void deleteObject(vector<Pipe>& pipes, vector<CompressorStation>& stations) {
 
                     if (!modifiedPipeIds.empty()) {
                         std::cout << "\nPipes with IDs ";
-
-                        std::unordered_set<int> uniquePipeIds(modifiedPipeIds.begin(), modifiedPipeIds.end());
-
                         bool first = true;
-                        for (const auto& pipeId : uniquePipeIds) {
+                        for (const auto& pipeId : modifiedPipeIds) {
                             if (!first) {
                                 std::cout << ", ";
                             }
-                            std::cout << pipeId;
+                            std::cout << pipeId.first; 
                             first = false;
                         }
 
@@ -858,16 +854,13 @@ void deleteObject(vector<Pipe>& pipes, vector<CompressorStation>& stations) {
                     return;
                 }
                 case 2: {
-                    vector<int> modifiedPipeIds;
-                    for (auto it = pipes.begin(); it != pipes.end(); ) {
-                        int pipe_id = it->getId();
-                        auto foundPipe = std::find_if(filteredPipes.begin(), filteredPipes.end(),
-                            [pipe_id](const auto& filteredPipe) {
-                                return pipe_id == filteredPipe.getId();
-                            });
-                        if (foundPipe != filteredPipes.end()) {
+                    unordered_map<int, bool> modifiedPipeIds;
+                    for (auto it = pipes.begin(); it != pipes.end();) {
+                        int pipe_id = it->second.getId();
+
+                        if (filteredPipes.find(pipe_id) != filteredPipes.end()) {
                             it = pipes.erase(it);
-                            modifiedPipeIds.push_back(pipe_id);
+                            modifiedPipeIds.emplace(pipe_id, true);
                         }
                         else {
                             ++it;
@@ -876,11 +869,13 @@ void deleteObject(vector<Pipe>& pipes, vector<CompressorStation>& stations) {
                     filteredPipes = pipes;
                     cout << "" << endl;
                     cout << "Pipes with IDs ";
-                    for (size_t i = 0; i < modifiedPipeIds.size(); ++i) {
-                        if (i != 0) {
-                            cout << ", ";
+                    bool first = true;
+                    for (const auto& pipeId : modifiedPipeIds) {
+                        if (!first) {
+                            std::cout << ", ";
                         }
-                        cout << modifiedPipeIds[i];
+                        std::cout << pipeId.first;
+                        first = false;
                     }
                     cout << " have been deleted." << "\n";
                     return;
@@ -902,7 +897,7 @@ void deleteObject(vector<Pipe>& pipes, vector<CompressorStation>& stations) {
         }
     }
     else if (deleteChoice == 2) {
-        static vector<CompressorStation> filteredStations;
+        static unordered_map<int, CompressorStation> filteredStations;
         filteredStations = stations;
         cin.ignore(numeric_limits<streamsize>::max(), '\n');
         while (true) {
@@ -922,10 +917,10 @@ void deleteObject(vector<Pipe>& pipes, vector<CompressorStation>& stations) {
                 if (!(cin >> editChoice)) {
                     cout << "" << endl;
                     cout << "Invalid choice. Please try again." << endl;
-                    logInput("User input: " + to_string(editChoice));
+                    logInput(to_string(editChoice));
                     continue;
                 }
-                logInput("User input: " + to_string(editChoice));
+                logInput(to_string(editChoice));
                 switch (editChoice) {
                 case 1: {
                     std::cout << "" << std::endl;
@@ -935,10 +930,10 @@ void deleteObject(vector<Pipe>& pipes, vector<CompressorStation>& stations) {
                     std::string input;
                     cin.ignore(numeric_limits<streamsize>::max(), '\n');
                     std::getline(std::cin, input);
-                    logInput("User input: " + input);
+                    logInput(input);
 
                     std::istringstream iss(input);
-                    std::vector<int> stationIds;
+                    std::unordered_map<int, bool> stationIds;
                     std::string stationId;
 
                     bool validIdFound = false;
@@ -951,7 +946,7 @@ void deleteObject(vector<Pipe>& pipes, vector<CompressorStation>& stations) {
                             }
                             else {
                                 validIdFound = true;
-                                stationIds.push_back(id);
+                                stationIds.emplace(id, true);
                             }
                         }
                         catch (std::invalid_argument&) {
@@ -968,12 +963,12 @@ void deleteObject(vector<Pipe>& pipes, vector<CompressorStation>& stations) {
                     }
 
                     cout << "" << endl;
-                    vector<int> modifiedStationIds;
-                    for (auto it = stations.begin(); it != stations.end(); ) {
-                        int station_id = it->getId();
-                        if (std::find(stationIds.begin(), stationIds.end(), station_id) != stationIds.end()) {
+                    unordered_map<int, bool> modifiedStationIds;
+                    for (auto it = stations.begin(); it != stations.end();) {
+                        int station_id = it->second.getId();
+                        if (stationIds.find(station_id) != stationIds.end()) {
                             it = stations.erase(it);
-                            modifiedStationIds.push_back(station_id);
+                            modifiedStationIds.emplace(station_id, true);
                         }
                         else {
                             ++it;
@@ -984,14 +979,13 @@ void deleteObject(vector<Pipe>& pipes, vector<CompressorStation>& stations) {
                     if (!modifiedStationIds.empty()) {
                         std::cout << "\nStations with IDs ";
 
-                        std::unordered_set<int> uniqueStationIds(modifiedStationIds.begin(), modifiedStationIds.end());
 
                         bool first = true;
-                        for (const auto& stationId : uniqueStationIds) {
+                        for (const auto& stationId : modifiedStationIds) {
                             if (!first) {
                                 std::cout << ", ";
                             }
-                            std::cout << stationId;
+                            std::cout << stationId.first;  
                             first = false;
                         }
 
@@ -1001,16 +995,12 @@ void deleteObject(vector<Pipe>& pipes, vector<CompressorStation>& stations) {
                     return;
                 }
                 case 2: {
-                    vector<int> modifiedStationIds;
-                    for (auto it = stations.begin(); it != stations.end(); ) {
-                        int station_id = it->getId();
-                        auto foundStation = std::find_if(filteredStations.begin(), filteredStations.end(),
-                            [station_id](const auto& filteredStation) {
-                                return station_id == filteredStation.getId();
-                            });
-                        if (foundStation != filteredStations.end()) {
+                    unordered_map<int, bool> modifiedStationIds;
+                    for (auto it = stations.begin(); it != stations.end();) {
+                        int station_id = it->second.getId();
+                        if (filteredStations.find(station_id) != filteredStations.end()) {
                             it = stations.erase(it);
-                            modifiedStationIds.push_back(station_id);
+                            modifiedStationIds.emplace(station_id, true);
                         }
                         else {
                             ++it;
@@ -1019,11 +1009,13 @@ void deleteObject(vector<Pipe>& pipes, vector<CompressorStation>& stations) {
                     filteredStations = stations;
                     cout << "" << endl;
                     cout << "Stations with IDs ";
-                    for (size_t i = 0; i < modifiedStationIds.size(); ++i) {
-                        if (i != 0) {
-                            cout << ", ";
+                    bool first = true;
+                    for (const auto& stationId : modifiedStationIds) {
+                        if (!first) {
+                            std::cout << ", ";
                         }
-                        cout << modifiedStationIds[i];
+                        std::cout << stationId.first;
+                        first = false;
                     }
                     cout << " have been deleted." << "\n";
                     return;

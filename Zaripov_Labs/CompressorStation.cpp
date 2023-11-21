@@ -44,16 +44,16 @@ void CompressorStation::readData() {
     cin.ignore(numeric_limits<streamsize>::max(), '\n');
     cout << "Enter station name: ";
     getline(cin, name);
-    logInput("User input: " + name);
+    logInput(name);
 
     while (true) {
         cout << "Enter workshop count: ";
         if (cin >> workshopCount && workshopCount > 0) {
-            logInput("User input: " + to_string(workshopCount));
+            logInput(to_string(workshopCount));
             break;
         }
         else {
-            logInput("User input: " + to_string(workshopCount));
+            logInput(to_string(workshopCount));
             cout << "Invalid input. Please enter a non-negative integer for workshop count." << endl;
             clearInput();
         }
@@ -63,15 +63,15 @@ void CompressorStation::readData() {
         cout << "Enter the number of operational workshops: ";
         int operationalWorkshops;
         if (cin >> operationalWorkshops && operationalWorkshops >= 0 && operationalWorkshops <= workshopCount) {
-            logInput("User input: " + to_string(operationalWorkshops));
-            workshopStatus.resize(workshopCount, false);
+            logInput(to_string(operationalWorkshops));
+            workshopStatus.clear(); 
             for (int i = 0; i < operationalWorkshops; i++) {
-                workshopStatus[i] = true;
+                workshopStatus[i] = true; 
             }
             break;
         }
         else {
-            logInput("User input: " + to_string(operationalWorkshops));
+            logInput(to_string(operationalWorkshops));
             cout << "Invalid input. Please enter a non-negative integer no greater than workshop count." << endl;
             clearInput();
         }
@@ -81,11 +81,11 @@ void CompressorStation::readData() {
         cout << "Enter efficiency rating: ";
         float efficiency;
         if (cin >> efficiency && efficiency >= 0) {
-            logInput("User input: " + to_string(efficiency));
+            logInput(to_string(efficiency));
             break;
         }
         else {
-            logInput("User input: " + to_string(efficiency));
+            logInput(to_string(efficiency));
             cout << "Invalid input. Please enter a non-negative number for efficiency rating." << endl;
             clearInput();
         }
@@ -98,8 +98,8 @@ void CompressorStation::displayData() const {
     cout << "Station name: " << name << endl;
     cout << "Workshop count: " << workshopCount << endl;
     cout << "Workshop status:" << endl;
-    for (int i = 0; i < workshopCount; i++) {
-        cout << "Workshop " << i + 1 << ": " << (workshopStatus[i] ? "Operational" : "Not operational") << endl;
+    for (const auto& entry : workshopStatus) {
+        cout << "Workshop " << entry.first + 1 << ": " << (entry.second ? "Operational" : "Not operational") << endl;
     }
     cout << "Efficiency rating: " << efficiency << endl;
     cout << "Non-operational workshops: " << nonOperationalPercentage << "%" << endl;
@@ -107,7 +107,6 @@ void CompressorStation::displayData() const {
 
 void CompressorStation::setWorkshopCount(int newCount) {
     workshopCount = newCount;
-    workshopStatus.resize(newCount);
 }
 
 void CompressorStation::setEfficiency(double newEfficiency) {
@@ -129,10 +128,10 @@ void CompressorStation::setWorkshopStatus(int i, bool status) {
 
 void CompressorStation::updateNonOperationalPercentage() {
     int nonOperationalWorkshops = 0;
-    for (bool status : workshopStatus) {
-        if (!status) {
+    for (const auto& workshop : workshopStatus) {
+        if (!workshop.second) {
             nonOperationalWorkshops++;
         }
     }
-    nonOperationalPercentage = (nonOperationalWorkshops / static_cast<double>(workshopCount)) * 100.0;
+    nonOperationalPercentage = (nonOperationalWorkshops / static_cast<double>(workshopStatus.size())) * 100.0;
 }

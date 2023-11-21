@@ -2,32 +2,33 @@
 #define UTILS_H
 
 #include <iostream>
-#include <vector>
+#include <unordered_map>
+#include <fstream>
 #include "Pipe.h"
 #include "CompressorStation.h"
 
 void clearInput();
 void logInput(const std::string& input);
-void showPipes(const std::vector<Pipe>& pipes);
-void showStations(const std::vector<CompressorStation>& stations);
-void addPipeFilter(std::vector<Pipe>& pipes);
-void addStationFilter(std::vector<CompressorStation>& stations);
-void showObjectsWithFilters(std::vector<Pipe>& pipes, std::vector<CompressorStation>& stations);
-void editPipeStatus(std::vector<Pipe>& pipes);
+void showPipes(const std::unordered_map<int, Pipe>& pipes);
+void showStations(const std::unordered_map<int, CompressorStation>& stations);
+void addPipeFilter(std::unordered_map<int, Pipe>& pipes);
+void addStationFilter(std::unordered_map<int, CompressorStation>& stations);
+void showObjectsWithFilters(const std::unordered_map<int, Pipe>& pipes, const std::unordered_map<int, CompressorStation>& stations);
+void editPipeStatus(std::unordered_map<int, Pipe>& pipes);
 void editWorkshop(CompressorStation& station);
-void editWorkshopStatus(std::vector<CompressorStation>& stations);
+void editWorkshopStatus(std::unordered_map<int, CompressorStation>& stations);
 void savePipe(const Pipe& pipe, std::ofstream& file);
 void saveStation(const CompressorStation& station, std::ofstream& file);
-void saveData(std::vector<Pipe>& pipes, std::vector<CompressorStation>& stations);
-void calculateMaxId(const std::vector<Pipe>& pipes);
-void loadPipe(std::ifstream& file, std::vector<Pipe>& pipes);
-void calculateMaxStationsId(const std::vector<CompressorStation>& stations);
-void loadStation(std::ifstream& file, std::vector<CompressorStation>& stations);
-void updateMaxPipeId(const std::vector<Pipe>& pipes);
-void updateMaxStationId(const std::vector<CompressorStation>& stations);
-void loadData(std::vector<Pipe>& pipes, std::vector<CompressorStation>& stations);
-void deletePipe(std::vector<Pipe>& pipes, int pipeId);
-void deleteCompressorStation(std::vector<CompressorStation>& stations, int stationId);
-void deleteObject(std::vector<Pipe>& pipes, std::vector<CompressorStation>& stations);
+void saveData(const std::unordered_map<int, Pipe>& pipes, const std::unordered_map<int, CompressorStation>& stations);
+void calculateMaxId(const std::unordered_map<int, Pipe>& pipes);
+void loadPipe(std::ifstream& file, std::unordered_map<int, Pipe>& pipes);
+void calculateMaxStationsId(const std::unordered_map<int, CompressorStation>& stations);
+void loadStation(std::ifstream& file, std::unordered_map<int, CompressorStation>& stations);
+void updateMaxPipeId(const std::unordered_map<int, Pipe>& pipes);
+void updateMaxStationId(const std::unordered_map<int, CompressorStation>& stations);
+void loadData(std::unordered_map<int, Pipe>& pipes, std::unordered_map<int, CompressorStation>& stations);
+void deletePipe(std::unordered_map<int, Pipe>& pipes, int pipeId);
+void deleteCompressorStation(std::unordered_map<int, CompressorStation>& stations, int stationId);
+void deleteObject(std::unordered_map<int, Pipe>& pipes, std::unordered_map<int, CompressorStation>& stations);
 
 #endif // UTILS_H

@@ -39,16 +39,16 @@ void Pipe::readData() {
     cin.ignore(numeric_limits<streamsize>::max(), '\n');
     cout << "Enter pipe name: ";
     getline(cin, name);
-    logInput("User input: " + name);
+    logInput(name);
 
     while (true) {
         cout << "Enter pipe length (km): ";
         if (cin >> length && length >= 0) {
-            logInput("User input: " + to_string(length));
+            logInput(to_string(length));
             break;
         }
         else {
-            logInput("User input: " + to_string(length));
+            logInput(to_string(length));
             cout << "Invalid input. Please enter a non-negative number for length." << endl;
             clearInput();
         }
@@ -57,11 +57,11 @@ void Pipe::readData() {
     while (true) {
         cout << "Enter pipe diameter (cm): ";
         if (cin >> diameter && diameter >= 0) {
-            logInput("User input: " + to_string(diameter));
+            logInput(to_string(diameter));
             break;
         }
         else {
-            logInput("User input: " + to_string(diameter));
+            logInput(to_string(diameter));
             cout << "Invalid input. Please enter a non-negative number for diameter." << endl;
             clearInput();
         }
