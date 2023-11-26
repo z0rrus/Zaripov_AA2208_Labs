@@ -18,23 +18,15 @@ void clearInput() {
 
 void logInput(const string& input) {
     static bool firstTime = true;
-    static ofstream logfile("log.txt", ios::app);
+    static ofstream logfile("log.txt", ios::out);
+    if (firstTime) {
+        logfile.close();
+        logfile.open("log.txt", ios::out | ios::trunc);
+        firstTime = false;
+    }
     if (logfile.is_open()) {
-        if (firstTime) {
-            time_t now = time(0);
-            tm ltm;
-            localtime_s(&ltm, &now);
-            char buffer[32];
-            logfile << endl;
-            strftime(buffer, sizeof(buffer), "%d/%m/%Y %H:%M:%S", &ltm);
-            logfile << buffer << " - Program started" << endl;
-            firstTime = false;
-        }
-        time_t now = time(0);
-        tm ltm;
-        localtime_s(&ltm, &now);
         logfile << input << endl;
-        logfile.flush(); 
+        logfile.flush();
     }
     else {
         cerr << "Unable to open log file." << endl;
@@ -750,8 +742,8 @@ void deleteObject(unordered_map<int, Pipe>& pipes, unordered_map<int, Compressor
     int deleteChoice;
     if (!(cin >> deleteChoice)) {
         cout << "Invalid choice. Please try again." << endl;
-        clearInput();
         logInput(to_string(deleteChoice));
+        clearInput();
         return;
     }
     logInput(to_string(deleteChoice));
@@ -762,8 +754,8 @@ void deleteObject(unordered_map<int, Pipe>& pipes, unordered_map<int, Compressor
         cin.ignore(numeric_limits<streamsize>::max(), '\n');
         while (true) {
             cout << "" << endl;
-            showPipes(filteredPipes);
-            if (filteredPipes.size() < 1) {
+            showPipes(pipes);
+            if (pipes.size() < 1) {
                 break;
             }
             else {
@@ -778,6 +770,7 @@ void deleteObject(unordered_map<int, Pipe>& pipes, unordered_map<int, Compressor
                     cout << "" << endl;
                     cout << "Invalid choice. Please try again." << endl;
                     logInput(to_string(editChoice));
+                    clearInput();
                     continue;
                 }
                 logInput(to_string(editChoice));
@@ -793,10 +786,9 @@ void deleteObject(unordered_map<int, Pipe>& pipes, unordered_map<int, Compressor
                     logInput(input);
 
                     std::istringstream iss(input);
-                    std::unordered_map<int, bool> pipeIds;
+                    std::unordered_set<int> pipeIds;
                     std::string pipeId;
 
-                    bool validIdFound = false;
 
                     while (iss >> pipeId) {
                         try {
@@ -805,8 +797,7 @@ void deleteObject(unordered_map<int, Pipe>& pipes, unordered_map<int, Compressor
                                 std::cout << "Invalid ID " << id << ". Skipping..." << std::endl;
                             }
                             else {
-                                validIdFound = true;
-                                pipeIds.emplace(id, true);
+                                pipeIds.emplace(id);
                             }
                         }
                         catch (std::invalid_argument&) {
@@ -817,39 +808,24 @@ void deleteObject(unordered_map<int, Pipe>& pipes, unordered_map<int, Compressor
                         }
                     }
 
-                    if (!validIdFound) {
+                    if (pipeIds.size()==0) {
                         std::cout << "No valid IDs entered. Exiting..." << std::endl;
                         break;
                     }
 
-                    cout << "" << endl;
-                    unordered_map<int, bool> modifiedPipeIds;
-                    for (auto it = pipes.begin(); it != pipes.end();) {
-                        int pipe_id = it->second.getId();
-
-                        if (pipeIds.find(pipe_id) != pipeIds.end()) {
-                            it = pipes.erase(it);
-                            modifiedPipeIds.emplace(pipe_id, true);
-                        }
-                        else {
-                            ++it;
-                        }
-                    }
-                    filteredPipes = pipes;
-
-                    if (!modifiedPipeIds.empty()) {
-                        std::cout << "\nPipes with IDs ";
-                        bool first = true;
-                        for (const auto& pipeId : modifiedPipeIds) {
+                    cout << endl << "\nPipes with IDs ";
+                    bool first = true;
+                    for (int id:pipeIds)
+                        if (pipes.contains(id))
+                        {
+                            pipes.erase(id);
                             if (!first) {
                                 std::cout << ", ";
                             }
-                            std::cout << pipeId.first; 
+                            std::cout << id;
                             first = false;
                         }
-
-                        std::cout << " have been deleted." << "\n";
-                    }
+                    std::cout << " have been deleted." << "\n";
 
                     return;
                 }
@@ -918,6 +894,7 @@ void deleteObject(unordered_map<int, Pipe>& pipes, unordered_map<int, Compressor
                     cout << "" << endl;
                     cout << "Invalid choice. Please try again." << endl;
                     logInput(to_string(editChoice));
+                    clearInput();
                     continue;
                 }
                 logInput(to_string(editChoice));
@@ -995,12 +972,12 @@ void deleteObject(unordered_map<int, Pipe>& pipes, unordered_map<int, Compressor
                     return;
                 }
                 case 2: {
-                    unordered_map<int, bool> modifiedStationIds;
+                    unordered_set<int> modifiedStationIds;
                     for (auto it = stations.begin(); it != stations.end();) {
                         int station_id = it->second.getId();
                         if (filteredStations.find(station_id) != filteredStations.end()) {
                             it = stations.erase(it);
-                            modifiedStationIds.emplace(station_id, true);
+                            modifiedStationIds.emplace(station_id);
                         }
                         else {
                             ++it;
@@ -1014,7 +991,7 @@ void deleteObject(unordered_map<int, Pipe>& pipes, unordered_map<int, Compressor
                         if (!first) {
                             std::cout << ", ";
                         }
-                        std::cout << stationId.first;
+                        std::cout << stationId;
                         first = false;
                     }
                     cout << " have been deleted." << "\n";
