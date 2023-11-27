@@ -10,7 +10,6 @@ private:
     int id;
     static int maxId;
     double length;
-    double diameter;
     bool inRepair;
     void setId(int newId);
     static void setMaxId(int NewMaxId);
@@ -21,6 +20,9 @@ private:
 public:
     std::string name;
     Pipe();
+    int inputStationId;
+    int outputStationId;
+    double diameter;
     int getId() const;
     static int getMaxId();
     std::string getName() const;
@@ -33,6 +35,7 @@ public:
     void setDiameter(double newDiameter);
     void setRepairStatus(bool inRepairStatus);
     void toggleRepairStatus();
+    bool isConnected() const;
 };
 
 #endif // PIPE_H

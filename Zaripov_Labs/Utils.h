@@ -7,6 +7,8 @@
 #include "Pipe.h"
 #include "CompressorStation.h"
 
+
+using namespace std;
 void clearInput();
 void logInput(const std::string& input);
 void showPipes(const std::unordered_map<int, Pipe>& pipes);
@@ -27,8 +29,13 @@ void loadStation(std::ifstream& file, std::unordered_map<int, CompressorStation>
 void updateMaxPipeId(const std::unordered_map<int, Pipe>& pipes);
 void updateMaxStationId(const std::unordered_map<int, CompressorStation>& stations);
 void loadData(std::unordered_map<int, Pipe>& pipes, std::unordered_map<int, CompressorStation>& stations);
-void deletePipe(std::unordered_map<int, Pipe>& pipes, int pipeId);
-void deleteCompressorStation(std::unordered_map<int, CompressorStation>& stations, int stationId);
+void deletePipes(std::unordered_map<int, Pipe>& pipes, std::unordered_map<int, CompressorStation>& stations,
+    const std::unordered_map<int, bool>& pipeIds);
+void deleteStations(std::unordered_map<int, CompressorStation>& stations, std::unordered_map<int, Pipe>& pipes,
+    const std::unordered_map<int, bool>& stationIds);
 void deleteObject(std::unordered_map<int, Pipe>& pipes, std::unordered_map<int, CompressorStation>& stations);
+void connectPipeToStations(std::unordered_map<int, Pipe>& pipes, std::unordered_map<int, CompressorStation>& stations);
+void connectStationsAndUpdatePipe(std::unordered_map<int, Pipe>& pipes, CompressorStation& inputStation, CompressorStation& outputStation, int pipeId);
+void decreaseConnectedToInput(std::unordered_map<int, Pipe>& pipes, std::unordered_map<int, CompressorStation>& stations, int pipeId);
 
 #endif // UTILS_H

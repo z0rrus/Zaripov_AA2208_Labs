@@ -23,7 +23,8 @@ int main() {
         std::cout << "5. Starting and stopping workshops" << std::endl;
         std::cout << "6. Save" << std::endl;
         std::cout << "7. Load" << std::endl;
-        std::cout << "8. Delete Object" << std::endl;
+        std::cout << "8. Delete object" << std::endl;
+        std::cout << "9. Connection stations" << std::endl;
         std::cout << "0. Exit" << std::endl;
         std::cout << std::endl;
 
@@ -71,6 +72,10 @@ int main() {
         }
         case 8: {
             deleteObject(pipes, stations);
+            break;
+        }
+        case 9: {
+            connectPipeToStations(pipes, stations);
             break;
         }
         case 0: {

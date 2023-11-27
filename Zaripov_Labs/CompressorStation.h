@@ -19,8 +19,10 @@ private:
 public:
     std::string name;
     int workshopCount;
-    std::unordered_map<int, bool> workshopStatus;
+    std::vector<bool> workshopStatus;
     static int getMaxId();
+    int pipesConnectedToInput; 
+    int pipesConnectedToOutput;
     CompressorStation();
     int getId() const;
     std::string getName() const;
@@ -34,6 +36,7 @@ public:
     void setNonOperationalPercentage(double newPercentage);
     void setWorkshopStatus(int index, bool status);
     void updateNonOperationalPercentage();
-};
+    bool getWorkshopStatus(int index) const;
+}; 
 
 #endif // COMPRESSORSTATION_H

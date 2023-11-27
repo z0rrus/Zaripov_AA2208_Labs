@@ -1,6 +1,8 @@
 #include "CompressorStation.h"
 #include "Utils.h"
 #include <iostream>
+#include <algorithm>
+
 
 using namespace std;
 int CompressorStation::maxId = 0;
@@ -72,9 +74,9 @@ void CompressorStation::readData() {
         int operationalWorkshops;
         if (cin >> operationalWorkshops && operationalWorkshops >= 0 && operationalWorkshops <= workshopCount) {
             logInput(to_string(operationalWorkshops));
-            workshopStatus.clear(); 
+            workshopStatus.resize(workshopCount, false);
             for (int i = 0; i < operationalWorkshops; i++) {
-                workshopStatus[i] = true; 
+                workshopStatus[i] = true;
             }
             break;
         }
@@ -87,7 +89,6 @@ void CompressorStation::readData() {
 
     while (true) {
         cout << "Enter efficiency rating: ";
-        float efficiency;
         if (cin >> efficiency && efficiency >= 0) {
             logInput(to_string(efficiency));
             break;
@@ -106,12 +107,15 @@ void CompressorStation::displayData() const {
     cout << "Station name: " << name << endl;
     cout << "Workshop count: " << workshopCount << endl;
     cout << "Workshop status:" << endl;
-    for (const auto& entry : workshopStatus) {
-        cout << "Workshop " << entry.first + 1 << ": " << (entry.second ? "Operational" : "Not operational") << endl;
+    for (int i = 0; i < workshopCount; i++) {
+        cout << "Workshop " << i + 1 << ": " << (workshopStatus[i] ? "Operational" : "Not operational") << endl;
     }
     cout << "Efficiency rating: " << efficiency << endl;
     cout << "Non-operational workshops: " << nonOperationalPercentage << "%" << endl;
+    cout << "   Pipes connected to input: " << pipesConnectedToInput << endl;
+    cout << "   Pipes connected to output: " << pipesConnectedToOutput << endl;
 }
+
 
 void CompressorStation::setWorkshopCount(int newCount) {
     workshopCount = newCount;
@@ -135,11 +139,16 @@ void CompressorStation::setWorkshopStatus(int i, bool status) {
 }
 
 void CompressorStation::updateNonOperationalPercentage() {
-    int nonOperationalWorkshops = 0;
-    for (const auto& workshop : workshopStatus) {
-        if (!workshop.second) {
-            nonOperationalWorkshops++;
-        }
-    }
+    int nonOperationalWorkshops = std::count(workshopStatus.begin(), workshopStatus.end(), false);
     nonOperationalPercentage = (nonOperationalWorkshops / static_cast<double>(workshopStatus.size())) * 100.0;
+}
+
+
+bool CompressorStation::getWorkshopStatus(int index) const {
+    if (index >= 0 && index < workshopStatus.size()) {
+        return workshopStatus[index];
+    }
+    else {
+        throw std::out_of_range("Invalid workshop index");
+    }
 }

@@ -33,6 +33,26 @@ void logInput(const string& input) {
     }
 }
 
+void decreaseConnectedToInput(std::unordered_map<int, Pipe>& pipes, std::unordered_map<int, CompressorStation>& stations, int pipeId) {
+    auto pipeIt = pipes.find(pipeId);
+    if (pipeIt != pipes.end()) {
+        Pipe& pipe = pipeIt->second;
+        int outputStationId = pipe.outputStationId;
+        auto stationIt = stations.find(outputStationId);
+        if (stationIt != stations.end()) {
+            CompressorStation& outputStation = stationIt->second;
+            outputStation.pipesConnectedToInput = outputStation.pipesConnectedToInput - 1;
+        }
+        int inputStationId = pipe.inputStationId;
+        auto stationIt2 = stations.find(inputStationId);
+        if (stationIt2 != stations.end()) {
+            CompressorStation& inputStation = stationIt2->second;
+            inputStation.pipesConnectedToOutput = inputStation.pipesConnectedToOutput - 1;
+        }
+    }
+}
+
+
 void showPipes(const std::unordered_map<int, Pipe>& pipes) {
     std::cout << "PIPES:" << std::endl;
     std::cout << std::endl;
@@ -524,6 +544,8 @@ void savePipe(const Pipe& pipe, ofstream& file) {
     file << pipe.getLength() << "\n";
     file << pipe.getDiameter() << "\n";
     file << pipe.getInRepair() << "\n";
+    file << pipe.inputStationId << "\n";
+    file << pipe.outputStationId << "\n";
 }
 
 void saveStation(const CompressorStation& station, ofstream& file) {
@@ -531,12 +553,15 @@ void saveStation(const CompressorStation& station, ofstream& file) {
     file << station.getId() << "\n";
     file << station.name << "\n";
     file << station.workshopCount << "\n";
-    for (const auto& statusEntry : station.workshopStatus) {
-        file << statusEntry.second << "\n";
+    for (bool status : station.workshopStatus) {
+        file << status << "\n";
     }
     file << station.getEfficiency() << "\n";
     file << station.getNonOperationalPercentage() << "\n";
+    file << station.pipesConnectedToInput<< "\n";
+    file << station.pipesConnectedToOutput << "\n";
 }
+
 
 void saveData(const std::unordered_map<int, Pipe>& pipes, const std::unordered_map<int, CompressorStation>& stations) {
     cout << "Enter the filename for saving: ";
@@ -606,6 +631,9 @@ void loadPipe(ifstream& file, unordered_map<int, Pipe>& pipes) {
     int repairStatus;
     file >> repairStatus;
     pipe.setRepairStatus(repairStatus != 0);
+    file.ignore(numeric_limits<streamsize>::max(), '\n');
+    file >> pipe.inputStationId;
+    file >> pipe.outputStationId;
     pipes.emplace(id, pipe);
     calculateMaxId(pipes);
 }
@@ -625,13 +653,14 @@ void calculateMaxStationsId(const std::unordered_map<int, CompressorStation>& st
 void loadStation(ifstream& file, unordered_map<int, CompressorStation>& stations) {
     CompressorStation station;
     string temp;
-    int id, workshopCount;
+    int id, workshopCount, pipesConnectedToInput, pipesConnectedToOutput;
     file >> id;
     station.setId(id);
     getline(file, temp);
     getline(file, station.name);
     file >> workshopCount;
     station.setWorkshopCount(workshopCount);
+    station.workshopStatus.resize(workshopCount);
     for (int i = 0; i < workshopCount; i++) {
         int status;
         file >> status;
@@ -642,6 +671,10 @@ void loadStation(ifstream& file, unordered_map<int, CompressorStation>& stations
     file >> nonOperationalPercentage;
     station.setEfficiency(efficiency);
     station.setNonOperationalPercentage(nonOperationalPercentage);
+    file >> pipesConnectedToInput;
+    file >> pipesConnectedToOutput;
+    station.pipesConnectedToInput = pipesConnectedToInput;
+    station.pipesConnectedToOutput = pipesConnectedToOutput;
     stations.emplace(id, station);
     calculateMaxStationsId(stations);
 }
@@ -707,30 +740,76 @@ void loadData(unordered_map<int, Pipe>& pipes, unordered_map<int, CompressorStat
 
 
 
-void deletePipe(std::unordered_map<int, Pipe>& pipes, int pipeId) {
-    auto it = pipes.find(pipeId);
+void deletePipes(std::unordered_map<int, Pipe>& pipes, std::unordered_map<int, CompressorStation>& stations,
+    const std::unordered_map<int, bool>& pipeIds) {
+    std::unordered_map<int, bool> modifiedPipeIds;
 
-    if (it != pipes.end()) {
-        pipes.erase(it);
-        std::cout << "Pipe with ID " << pipeId << " has been deleted." << std::endl;
-        calculateMaxId(pipes);
+    for (auto it = pipes.begin(); it != pipes.end();) {
+        int pipe_id = it->second.getId();
+        if (pipeIds.find(pipe_id) != pipeIds.end()) {
+            decreaseConnectedToInput(pipes, stations, pipe_id);
+            it = pipes.erase(it);
+            modifiedPipeIds.emplace(pipe_id, true);
+        }
+        else {
+            ++it;
+        }
     }
-    else {
-        std::cout << "Pipe with ID " << pipeId << " not found." << std::endl;
+    if (!modifiedPipeIds.empty()) {
+        std::cout << "Pipe(s) with ID(s) ";
+        bool first = true;
+        for (const auto& pipeId : modifiedPipeIds) {
+            if (!first) {
+                std::cout << ", ";
+            }
+            std::cout << pipeId.first;
+            first = false;
+        }
+
+        std::cout << " have been deleted." << "\n";
     }
 }
 
 
-void deleteCompressorStation(std::unordered_map<int, CompressorStation>& stations, int stationId) {
-    auto it = stations.find(stationId);
+void deleteStations(std::unordered_map<int, CompressorStation>& stations, std::unordered_map<int, Pipe>& pipes,
+    const std::unordered_map<int, bool>& stationIds) {
+    std::unordered_map<int, bool> modifiedStationIds;
 
-    if (it != stations.end()) {
-        stations.erase(it);
-        std::cout << "Compressor Station with ID " << stationId << " has been deleted." << std::endl;
-        calculateMaxStationsId(stations);
+    for (auto it = stations.begin(); it != stations.end();) {
+        int station_id = it->second.getId();
+        if (stationIds.find(station_id) != stationIds.end()) {
+            auto pipeIt = pipes.begin();
+            while (pipeIt != pipes.end()) {
+                Pipe& pipe = pipeIt->second;
+                if (pipe.inputStationId == station_id) {
+                    pipe.inputStationId = 0;
+                    decreaseConnectedToInput(pipes, stations, pipe.getId());
+                }
+                if (pipe.outputStationId == station_id) {
+                    pipe.outputStationId = 0;
+                    decreaseConnectedToInput(pipes, stations, pipe.getId());
+                }
+                ++pipeIt;
+            }
+            it = stations.erase(it);
+            modifiedStationIds.emplace(station_id, true);
+        }
+        else {
+            ++it;
+        }
     }
-    else {
-        std::cout << "Compressor Station with ID " << stationId << " not found." << std::endl;
+    if (!modifiedStationIds.empty()) {
+        std::cout << "Station(s) with ID(s) ";
+        bool first = true;
+        for (const auto& stationId : modifiedStationIds) {
+            if (!first) {
+                std::cout << ", ";
+            }
+            std::cout << stationId.first;
+            first = false;
+        }
+
+        std::cout << " have been deleted." << "\n";
     }
 }
 
@@ -781,23 +860,25 @@ void deleteObject(unordered_map<int, Pipe>& pipes, unordered_map<int, Compressor
                     std::cout << "" << std::endl;
 
                     std::string input;
-                    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
                     std::getline(std::cin, input);
                     logInput(input);
 
                     std::istringstream iss(input);
-                    std::unordered_set<int> pipeIds;
+                    std::unordered_map<int, bool> pipeIds;
                     std::string pipeId;
 
+                    bool validIdFound = false;
 
                     while (iss >> pipeId) {
                         try {
                             int id = std::stoi(pipeId);
-                            if (id < 1 || id > Pipe::getMaxId()) {
+                            if (id < 1 || id > CompressorStation::getMaxId()) {
                                 std::cout << "Invalid ID " << id << ". Skipping..." << std::endl;
                             }
                             else {
-                                pipeIds.emplace(id);
+                                validIdFound = true;
+                                pipeIds.emplace(id, true);
                             }
                         }
                         catch (std::invalid_argument&) {
@@ -808,54 +889,28 @@ void deleteObject(unordered_map<int, Pipe>& pipes, unordered_map<int, Compressor
                         }
                     }
 
-                    if (pipeIds.size()==0) {
+                    if (!validIdFound) {
                         std::cout << "No valid IDs entered. Exiting..." << std::endl;
                         break;
                     }
 
-                    cout << endl << "\nPipes with IDs ";
-                    bool first = true;
-                    for (int id:pipeIds)
-                        if (pipes.contains(id))
-                        {
-                            pipes.erase(id);
-                            if (!first) {
-                                std::cout << ", ";
-                            }
-                            std::cout << id;
-                            first = false;
-                        }
-                    std::cout << " have been deleted." << "\n";
+                    std::cout << "" << std::endl;
+                    deletePipes(pipes, stations, pipeIds);
 
                     return;
                 }
+
                 case 2: {
-                    unordered_map<int, bool> modifiedPipeIds;
-                    for (auto it = pipes.begin(); it != pipes.end();) {
-                        int pipe_id = it->second.getId();
+                    std::unordered_map<int, bool> modifiedPipeIds;
 
-                        if (filteredPipes.find(pipe_id) != filteredPipes.end()) {
-                            it = pipes.erase(it);
-                            modifiedPipeIds.emplace(pipe_id, true);
-                        }
-                        else {
-                            ++it;
-                        }
+                    for (const auto& entry : filteredPipes) {
+                        int pipe_id = entry.second.getId();
+                        modifiedPipeIds.emplace(pipe_id, true);
                     }
-                    filteredPipes = pipes;
-                    cout << "" << endl;
-                    cout << "Pipes with IDs ";
-                    bool first = true;
-                    for (const auto& pipeId : modifiedPipeIds) {
-                        if (!first) {
-                            std::cout << ", ";
-                        }
-                        std::cout << pipeId.first;
-                        first = false;
-                    }
-                    cout << " have been deleted." << "\n";
+                    deletePipes(pipes, stations, modifiedPipeIds);
                     return;
                 }
+
                 case 3: {
                     addPipeFilter(filteredPipes);
                     break;
@@ -905,7 +960,7 @@ void deleteObject(unordered_map<int, Pipe>& pipes, unordered_map<int, Compressor
                     std::cout << "" << std::endl;
 
                     std::string input;
-                    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
                     std::getline(std::cin, input);
                     logInput(input);
 
@@ -939,62 +994,19 @@ void deleteObject(unordered_map<int, Pipe>& pipes, unordered_map<int, Compressor
                         break;
                     }
 
-                    cout << "" << endl;
-                    unordered_map<int, bool> modifiedStationIds;
-                    for (auto it = stations.begin(); it != stations.end();) {
-                        int station_id = it->second.getId();
-                        if (stationIds.find(station_id) != stationIds.end()) {
-                            it = stations.erase(it);
-                            modifiedStationIds.emplace(station_id, true);
-                        }
-                        else {
-                            ++it;
-                        }
-                    }
-                    filteredStations = stations;
-
-                    if (!modifiedStationIds.empty()) {
-                        std::cout << "\nStations with IDs ";
-
-
-                        bool first = true;
-                        for (const auto& stationId : modifiedStationIds) {
-                            if (!first) {
-                                std::cout << ", ";
-                            }
-                            std::cout << stationId.first;  
-                            first = false;
-                        }
-
-                        std::cout << " have been deleted." << "\n";
-                    }
+                    std::cout << "" << std::endl;
+                    deleteStations(stations, pipes, stationIds);
 
                     return;
                 }
                 case 2: {
-                    unordered_set<int> modifiedStationIds;
-                    for (auto it = stations.begin(); it != stations.end();) {
-                        int station_id = it->second.getId();
-                        if (filteredStations.find(station_id) != filteredStations.end()) {
-                            it = stations.erase(it);
-                            modifiedStationIds.emplace(station_id);
-                        }
-                        else {
-                            ++it;
-                        }
+                    std::unordered_map<int, bool> modifiedStationIds;
+
+                    for (const auto& entry : filteredStations) {
+                        int station_id = entry.second.getId();
+                        modifiedStationIds.emplace(station_id, true);
                     }
-                    filteredStations = stations;
-                    cout << "" << endl;
-                    cout << "Stations with IDs ";
-                    bool first = true;
-                    for (const auto& stationId : modifiedStationIds) {
-                        if (!first) {
-                            std::cout << ", ";
-                        }
-                        std::cout << stationId;
-                        first = false;
-                    }
-                    cout << " have been deleted." << "\n";
+                    deleteStations(stations, pipes, modifiedStationIds);
                     return;
                 }
                 case 3: {
@@ -1013,4 +1025,134 @@ void deleteObject(unordered_map<int, Pipe>& pipes, unordered_map<int, Compressor
             }
         }
         }
+}
+
+
+
+void connectStationsAndUpdatePipe(std::unordered_map<int, Pipe>& pipes, CompressorStation& inputStation, CompressorStation& outputStation, int pipeId) {
+    Pipe& pipe = pipes[pipeId];
+    pipe.inputStationId = inputStation.getId();
+    pipe.outputStationId = outputStation.getId();
+    inputStation.pipesConnectedToOutput++;
+    outputStation.pipesConnectedToInput++;
+    std::cout << "Stations successfully connected." << std::endl;
+}
+
+
+void connectPipeToStations(std::unordered_map<int, Pipe>& pipes, std::unordered_map<int, CompressorStation>& stations) {
+    int inputStationId, outputStationId, pipeId;
+
+    showStations(stations);
+    if (stations.size() < 2) {
+        std::cout << "Insufficient number of stations in the database. Minimum two stations are required for a connection." << std::endl;
+        return;
+    }
+
+    bool foundSuitableStations = false;
+
+    for (auto outputStationIt = stations.begin(); outputStationIt != stations.end(); ++outputStationIt) {
+        for (auto inputStationIt = stations.begin(); inputStationIt != stations.end(); ++inputStationIt) {
+            if (outputStationIt->first != inputStationIt->first) {
+                if (outputStationIt->second.pipesConnectedToOutput < outputStationIt->second.workshopCount) {
+                    if (inputStationIt->second.pipesConnectedToInput < inputStationIt->second.workshopCount) {
+                        foundSuitableStations = true;
+                    }
+                }
+            }
+        }
+    }
+    if (!foundSuitableStations) {
+        std::cout << "No suitable pair of stations found." << std::endl;
+        return;
+    }
+
+    do {
+        std::cout << "Enter the ID of the input station: ";
+        clearInput();
+        std::cin >> inputStationId;
+        logInput(to_string(inputStationId));
+        auto inputStationIt = stations.find(inputStationId);
+        if (inputStationIt == stations.end()) {
+            std::cout << "Station with the specified ID not found." << std::endl;
+        }
+        else if (inputStationIt->second.pipesConnectedToOutput >= inputStationIt->second.workshopCount) {
+            std::cout << "Number of pipes connected to Output exceeds or equals workshop count. Please choose another station." << std::endl;
+        }
+        else {
+            bool atLeastOneStationAvailable = std::any_of(stations.begin(), stations.end(), [inputStationId](const auto& pair) {
+                return pair.first != inputStationId &&
+                    pair.second.pipesConnectedToInput < pair.second.workshopCount;
+                });
+
+            if (atLeastOneStationAvailable) {
+                break;
+            }
+            else {
+                std::cout << "No other suitable station available. Please choose a different input station first." << std::endl;
+            }
+        }
+    } while (true);
+
+
+
+    CompressorStation& inputStation = stations[inputStationId];
+
+    do {
+        std::cout << "Enter the ID of the output station: ";
+        clearInput();
+        std::cin >> outputStationId;
+        logInput(to_string(outputStationId));
+
+        auto outputStationIt = stations.find(outputStationId);
+
+        if (outputStationIt == stations.end()) {
+            std::cout << "Station with the specified ID not found." << std::endl;
+        }
+        else if (outputStationIt->second.pipesConnectedToInput >= outputStationIt->second.workshopCount) {
+            std::cout << "Number of pipes connected to input exceeds or equals workshop count. Please choose another station." << std::endl;
+        }
+        else if (outputStationId == inputStationId) {
+            std::cout << "Output station cannot be the same as the input station. Please choose another station." << std::endl;
+        }
+        else {
+            break;
+        }
+    } while (true);
+
+    CompressorStation& outputStation = stations[outputStationId];
+
+    showPipes(pipes);
+    if (std::any_of(pipes.begin(), pipes.end(),
+        [](const auto& pair) {
+            return !pair.second.getInRepair() && pair.second.isConnected() == 0;
+        })) {
+        while (true) {
+            std::cout << "Enter the ID of the pipe: ";
+            clearInput();
+            std::cin >> pipeId;
+            logInput(to_string(pipeId));
+            auto pipeIt = pipes.find(pipeId);
+            if (pipeIt != pipes.end()) {
+                const Pipe& selectedPipe = pipeIt->second;
+                if (selectedPipe.inputStationId == 0 || selectedPipe.outputStationId == 0) {
+                    connectStationsAndUpdatePipe(pipes, inputStation, outputStation, pipeId);
+                    return;
+                }
+                else {
+                    std::cout << "Selected pipe is already connected. Please choose another pipe." << std::endl;
+                }
+            }
+            else {
+                std::cout << "Pipe with ID " << pipeId << " not found." << std::endl;
+            }
+        }
+    }
+    else {
+        std::cout << "No available pipes. Connection not possible. Let's create a new pipe." << std::endl;
+    }
+    Pipe newPipe;
+    newPipe.readData();
+    pipes.insert(std::make_pair(pipes.size() + 1, newPipe));
+    pipeId = newPipe.getId();
+    connectStationsAndUpdatePipe(pipes, inputStation, outputStation, pipeId);
 }
