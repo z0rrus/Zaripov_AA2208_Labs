@@ -37,5 +37,6 @@ void deleteObject(std::unordered_map<int, Pipe>& pipes, std::unordered_map<int, 
 void connectPipeToStations(std::unordered_map<int, Pipe>& pipes, std::unordered_map<int, CompressorStation>& stations);
 void connectStationsAndUpdatePipe(std::unordered_map<int, Pipe>& pipes, CompressorStation& inputStation, CompressorStation& outputStation, int pipeId);
 void decreaseConnectedToInput(std::unordered_map<int, Pipe>& pipes, std::unordered_map<int, CompressorStation>& stations, int pipeId);
+void disconnectPipeline(std::unordered_map<int, Pipe>& pipes, std::unordered_map<int, CompressorStation>& stations);
 
 #endif // UTILS_H

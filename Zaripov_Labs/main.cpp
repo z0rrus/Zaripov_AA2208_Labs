@@ -24,7 +24,8 @@ int main() {
         std::cout << "6. Save" << std::endl;
         std::cout << "7. Load" << std::endl;
         std::cout << "8. Delete object" << std::endl;
-        std::cout << "9. Connection stations" << std::endl;
+        std::cout << "9. Connect pipeline" << std::endl;
+        std::cout << "10. Disconnect pipeline" << std::endl;
         std::cout << "0. Exit" << std::endl;
         std::cout << std::endl;
 
@@ -76,6 +77,10 @@ int main() {
         }
         case 9: {
             connectPipeToStations(pipes, stations);
+            break;
+        }
+        case 10: {
+            disconnectPipeline(pipes, stations);
             break;
         }
         case 0: {

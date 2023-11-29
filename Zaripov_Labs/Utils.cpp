@@ -1040,7 +1040,7 @@ void connectStationsAndUpdatePipe(std::unordered_map<int, Pipe>& pipes, Compress
 
 
 void connectPipeToStations(std::unordered_map<int, Pipe>& pipes, std::unordered_map<int, CompressorStation>& stations) {
-    int inputStationId, outputStationId, pipeId;
+    int inputStationId, outputStationId, pipeId, userDiameter;
 
     showStations(stations);
     if (stations.size() < 2) {
@@ -1121,38 +1121,185 @@ void connectPipeToStations(std::unordered_map<int, Pipe>& pipes, std::unordered_
 
     CompressorStation& outputStation = stations[outputStationId];
 
-    showPipes(pipes);
-    if (std::any_of(pipes.begin(), pipes.end(),
-        [](const auto& pair) {
-            return !pair.second.getInRepair() && pair.second.isConnected() == 0;
-        })) {
-        while (true) {
-            std::cout << "Enter the ID of the pipe: ";
-            clearInput();
-            std::cin >> pipeId;
-            logInput(to_string(pipeId));
-            auto pipeIt = pipes.find(pipeId);
-            if (pipeIt != pipes.end()) {
-                const Pipe& selectedPipe = pipeIt->second;
-                if (selectedPipe.inputStationId == 0 || selectedPipe.outputStationId == 0) {
-                    connectStationsAndUpdatePipe(pipes, inputStation, outputStation, pipeId);
-                    return;
-                }
-                else {
-                    std::cout << "Selected pipe is already connected. Please choose another pipe." << std::endl;
-                }
-            }
-            else {
-                std::cout << "Pipe with ID " << pipeId << " not found." << std::endl;
-            }
+    while (true) {
+        std::cout << "Enter the diameter (500, 700, 1000, or 1400) mm: ";
+        clearInput();
+        std::cin >> userDiameter;
+        logInput(std::to_string(userDiameter));
+        if (userDiameter != 500 && userDiameter != 700 && userDiameter != 1000 && userDiameter != 1400) {
+            std::cout << "Invalid diameter. Please enter a valid diameter." << std::endl;
+            continue; 
+        }
+        else {
+            break;
         }
     }
-    else {
-        std::cout << "No available pipes. Connection not possible. Let's create a new pipe." << std::endl;
+    for (auto& pipeEntry : pipes) {
+        const Pipe& currentPipe = pipeEntry.second;
+        if (!currentPipe.isConnected() && currentPipe.diameter == userDiameter) {
+            pipeId = currentPipe.getId();
+            connectStationsAndUpdatePipe(pipes, inputStation, outputStation, pipeId);
+            return;
+        }
     }
+    std::cout << "No available pipes. Connection not possible. Let's create a new pipe." << std::endl;
     Pipe newPipe;
-    newPipe.readData();
+    newPipe.readData(&userDiameter);
     pipes.insert(std::make_pair(pipes.size() + 1, newPipe));
     pipeId = newPipe.getId();
     connectStationsAndUpdatePipe(pipes, inputStation, outputStation, pipeId);
+}
+
+void disconnectPipeline(std::unordered_map<int, Pipe>& pipes, std::unordered_map<int, CompressorStation>& stations) {
+    if (pipes.empty()) {
+        cout << "There are no pipes in pipeline." << endl;
+        return;
+    }
+    bool connect = false;
+    for (auto& pipeEntry : pipes) {
+        const Pipe& currentPipe = pipeEntry.second;
+        if (currentPipe.isConnected()) {
+            connect = true;
+            break;
+        }
+    }
+    if (!connect) {
+        cout << "There are no connected pipes in pipeline." << endl;
+        return;
+    }
+
+    static unordered_map<int, Pipe> filteredPipes;
+    filteredPipes = pipes;
+    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+    while (true) {
+        cout << "" << endl;
+        showPipes(filteredPipes);
+        cout << "" << endl;
+        cout << "Choose an option: " << endl;
+        cout << "1. Enter pipes ID for disconnecting" << endl;
+        cout << "2. Disconnect all pipes in this list" << endl;
+        cout << "3. Add filter" << endl;
+        cout << "0. Back to main menu (all filters will be reset)" << endl;
+        int editChoice;
+        if (!(cin >> editChoice)) {
+            cout << "" << endl;
+            cout << "Invalid choice. Please try again." << endl;
+            logInput(to_string(editChoice));
+            continue;
+        }
+        logInput(to_string(editChoice));
+        switch (editChoice) {
+        case 1: {
+            std::cout << "" << std::endl;
+            std::cout << "Enter the IDs of the pipes to disconnect (separated by space): ";
+            std::cout << "" << std::endl;
+
+            std::string input;
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            std::getline(std::cin, input);
+            logInput(input);
+
+            std::istringstream iss(input);
+            std::unordered_map<int, bool> pipeIds;
+            std::string pipeId;
+
+            bool validIdFound = false;
+
+            while (iss >> pipeId) {
+                try {
+                    int id = std::stoi(pipeId);
+                    if (id < 1 || id > Pipe::getMaxId()) {
+                        std::cout << "Invalid ID " << id << ". Skipping..." << std::endl;
+                    }
+                    else {
+                        validIdFound = true;
+                        pipeIds.emplace(id, true);
+                    }
+                }
+                catch (std::invalid_argument&) {
+                    std::cout << "Invalid ID " << pipeId << ". Skipping..." << std::endl;
+                }
+                catch (std::out_of_range&) {
+                    std::cout << "Invalid ID " << pipeId << ". Skipping..." << std::endl;
+                }
+            }
+
+            if (!validIdFound) {
+                std::cout << "No valid IDs entered. Exiting..." << std::endl;
+                break;
+            }
+            if (!validIdFound) {
+                disconnectPipeline(filteredPipes, stations);
+                break;
+            }
+            unordered_map<int, bool> modifiedPipeIds;
+            for (auto it = pipes.begin(); it != pipes.end(); ++it) {
+                const Pipe& pipe = it->second;
+                int pipe_id = pipe.getId();
+                auto idIt = pipeIds.find(pipe_id);
+                if (idIt != pipeIds.end() && pipes[pipe_id].isConnected()) {
+                    decreaseConnectedToInput(pipes, stations, pipe_id);
+                    pipes[pipe_id].inputStationId = 0;
+                    modifiedPipeIds.emplace(pipe_id, true);
+                }
+                else if (idIt != pipeIds.end()) {
+                    std::cout << "Pipe with id " << pipe_id << " already disconnected." << std::endl;
+                }
+            }
+            filteredPipes = pipes;
+            std::cout << "";
+            if (!modifiedPipeIds.empty()) {
+                std::cout << "\nPipe(s) with ID(s) ";
+                bool first = true;
+                for (const auto& pipeId : modifiedPipeIds) {
+                    if (!first) {
+                        std::cout << ", ";
+                    }
+                    std::cout << pipeId.first;
+                    first = false;
+                }
+                std::cout << " was(were) disconnected'" << "'\n";
+            }
+            return;
+        }
+        case 2: {
+            unordered_map<int, bool> modifiedPipeIds;
+            for (auto& pipeEntry : pipes) {
+                int pipe_id = pipeEntry.first;
+                Pipe& pipe = pipeEntry.second;
+                auto filteredPipeIt = filteredPipes.find(pipe_id);
+                if (filteredPipeIt != filteredPipes.end() && pipe.isConnected()) {
+                    decreaseConnectedToInput(pipes, stations, pipe.getId());
+                    pipe.inputStationId = 0;
+                    modifiedPipeIds.emplace(pipe_id, true);
+                }
+            }
+            filteredPipes = pipes;
+            cout << "" << endl;
+            std::cout << "\nPipe(s) with ID(s) ";
+            bool first = true;
+            for (const auto& pipeId : modifiedPipeIds) {
+                if (!first) {
+                    std::cout << ", ";
+                }
+                std::cout << pipeId.first;
+                first = false;
+            }
+            std::cout << " was(were) disconnected'" << "'\n";
+            return;
+        }
+        case 3: {
+            addPipeFilter(filteredPipes);
+            break;
+        }
+        case 0: {
+            return;
+        }
+        default: {
+            cout << "" << endl;
+            cout << "INVALID ACTION CHOICE. PLEASE TRY AGAIN." << endl;
+            break;
+        }
+        }
+    }
 }

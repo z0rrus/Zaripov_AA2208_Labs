@@ -43,7 +43,7 @@ void Pipe::setMaxId(int newMaxId) {
     maxId = newMaxId;
 }
 
-void Pipe::readData() {
+void Pipe::readData(int* pdiameter /*= nullptr*/) {
     cin.ignore(numeric_limits<streamsize>::max(), '\n');
     cout << "Enter pipe name: ";
     getline(cin, name);
@@ -62,17 +62,22 @@ void Pipe::readData() {
         }
     }
 
-    while (true) {
-        cout << "Enter pipe diameter (choose from 500, 700, 1000, 1400 mm): ";
-        if (cin >> diameter && (diameter == 500 || diameter == 700 || diameter == 1000 || diameter == 1400)) {
-            logInput(to_string(diameter));
-            break;
+    if (pdiameter == nullptr || *pdiameter == 0) {
+        while (true) {
+            cout << "Enter pipe diameter (choose from 500, 700, 1000, 1400 mm): ";
+            if (cin >> diameter && (diameter == 500 || diameter == 700 || diameter == 1000 || diameter == 1400)) {
+                logInput(to_string(diameter));
+                break;
+            }
+            else {
+                logInput(to_string(diameter));
+                cout << "Invalid input. Please enter one of the allowed diameters: 500, 700, 1000, 1400." << endl;
+                clearInput();
+            }
         }
-        else {
-            logInput(to_string(diameter));
-            cout << "Invalid input. Please enter one of the allowed diameters: 500, 700, 1000, 1400." << endl;
-            clearInput();
-        }
+    }
+    else {
+        diameter = *pdiameter;
     }
     cout << "The pipe has been successfully created." << endl;
 }

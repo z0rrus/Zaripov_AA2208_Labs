@@ -29,7 +29,7 @@ public:
     double getLength() const;
     double getDiameter() const;
     bool getInRepair() const;
-    void readData();
+    void readData(int* pdiameter = nullptr);
     void displayData() const;
     void setLength(double newLength);
     void setDiameter(double newDiameter);
