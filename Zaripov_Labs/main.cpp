@@ -16,17 +16,18 @@ int main() {
     while (true) {
         std::cout << std::endl;
         std::cout << "Menu:" << std::endl;
-        std::cout << "1. Add a pipe" << std::endl;
-        std::cout << "2. Add a compressor station" << std::endl;
-        std::cout << "3. View all objects" << std::endl;
-        std::cout << "4. Editing the operation status of pipes" << std::endl;
-        std::cout << "5. Starting and stopping workshops" << std::endl;
-        std::cout << "6. Save" << std::endl;
-        std::cout << "7. Load" << std::endl;
-        std::cout << "8. Delete object" << std::endl;
-        std::cout << "9. Connect pipeline" << std::endl;
+        std::cout << "1.  Add a pipe" << std::endl;
+        std::cout << "2.  Add a compressor station" << std::endl;
+        std::cout << "3.  View all objects" << std::endl;
+        std::cout << "4.  Editing the operation status of pipes" << std::endl;
+        std::cout << "5.  Starting and stopping workshops" << std::endl;
+        std::cout << "6.  Save" << std::endl;
+        std::cout << "7.  Load" << std::endl;
+        std::cout << "8.  Delete object" << std::endl;
+        std::cout << "9.  Connect pipeline" << std::endl;
         std::cout << "10. Disconnect pipeline" << std::endl;
-        std::cout << "0. Exit" << std::endl;
+        std::cout << "11. Show sorted graph" << std::endl;
+        std::cout << "0.  Exit" << std::endl;
         std::cout << std::endl;
 
         int choice;
@@ -81,6 +82,10 @@ int main() {
         }
         case 10: {
             disconnectPipeline(pipes, stations);
+            break;
+        }
+        case 11: {
+            topologicalSort(pipes, stations);
             break;
         }
         case 0: {

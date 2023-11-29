@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <unordered_map>
+#include <unordered_set>
 #include <fstream>
 #include "Pipe.h"
 #include "CompressorStation.h"
@@ -38,5 +39,8 @@ void connectPipeToStations(std::unordered_map<int, Pipe>& pipes, std::unordered_
 void connectStationsAndUpdatePipe(std::unordered_map<int, Pipe>& pipes, CompressorStation& inputStation, CompressorStation& outputStation, int pipeId);
 void decreaseConnectedToInput(std::unordered_map<int, Pipe>& pipes, std::unordered_map<int, CompressorStation>& stations, int pipeId);
 void disconnectPipeline(std::unordered_map<int, Pipe>& pipes, std::unordered_map<int, CompressorStation>& stations);
+void topologicalSort(const std::unordered_map<int, Pipe>& pipes, const std::unordered_map<int, CompressorStation>& stations);
+bool hasCycle(const std::unordered_map<int, Pipe>& pipes);
+bool hasCycleDFS(int currentStation, const std::unordered_map<int, Pipe>& pipes, std::unordered_set<int>& visited, std::unordered_set<int>& recStack);
 
 #endif // UTILS_H

@@ -4,10 +4,11 @@
 #include <sstream>
 #include <algorithm>
 #include <unordered_map>
-#include <unordered_map>
 #include <string>
 #include <unordered_set>  
 #include <ctime>
+#include <queue>
+#include <stack>
 
 using namespace std;
 
@@ -873,7 +874,7 @@ void deleteObject(unordered_map<int, Pipe>& pipes, unordered_map<int, Compressor
                     while (iss >> pipeId) {
                         try {
                             int id = std::stoi(pipeId);
-                            if (id < 1 || id > CompressorStation::getMaxId()) {
+                            if (id < 1 || id > Pipe::getMaxId()) {
                                 std::cout << "Invalid ID " << id << ". Skipping..." << std::endl;
                             }
                             else {
@@ -1240,6 +1241,7 @@ void disconnectPipeline(std::unordered_map<int, Pipe>& pipes, std::unordered_map
                 if (idIt != pipeIds.end() && pipes[pipe_id].isConnected()) {
                     decreaseConnectedToInput(pipes, stations, pipe_id);
                     pipes[pipe_id].inputStationId = 0;
+                    pipes[pipe_id].outputStationId = 0;
                     modifiedPipeIds.emplace(pipe_id, true);
                 }
                 else if (idIt != pipeIds.end()) {
@@ -1258,7 +1260,7 @@ void disconnectPipeline(std::unordered_map<int, Pipe>& pipes, std::unordered_map
                     std::cout << pipeId.first;
                     first = false;
                 }
-                std::cout << " was(were) disconnected'" << "'\n";
+                std::cout << " was(were) disconnected" << "\n";
             }
             return;
         }
@@ -1271,6 +1273,7 @@ void disconnectPipeline(std::unordered_map<int, Pipe>& pipes, std::unordered_map
                 if (filteredPipeIt != filteredPipes.end() && pipe.isConnected()) {
                     decreaseConnectedToInput(pipes, stations, pipe.getId());
                     pipe.inputStationId = 0;
+                    pipe.outputStationId = 0;
                     modifiedPipeIds.emplace(pipe_id, true);
                 }
             }
@@ -1285,7 +1288,7 @@ void disconnectPipeline(std::unordered_map<int, Pipe>& pipes, std::unordered_map
                 std::cout << pipeId.first;
                 first = false;
             }
-            std::cout << " was(were) disconnected'" << "'\n";
+            std::cout << " was(were) disconnected" << "\n";
             return;
         }
         case 3: {
@@ -1298,6 +1301,125 @@ void disconnectPipeline(std::unordered_map<int, Pipe>& pipes, std::unordered_map
         default: {
             cout << "" << endl;
             cout << "INVALID ACTION CHOICE. PLEASE TRY AGAIN." << endl;
+            break;
+        }
+        }
+    }
+}
+
+bool hasCycleDFS(int currentStation, const std::unordered_map<int, Pipe>& pipes, std::unordered_set<int>& visited, std::unordered_set<int>& recStack) {
+    visited.insert(currentStation);
+    recStack.insert(currentStation);
+    for (const auto& pipe : pipes) {
+        if (pipe.second.inputStationId == currentStation && pipe.second.isConnected()) {
+            int nextStation = pipe.second.outputStationId;
+            if (visited.find(nextStation) == visited.end()) {
+                if (hasCycleDFS(nextStation, pipes, visited, recStack)) {
+                    return true;
+                }
+            }
+            else if (recStack.find(nextStation) != recStack.end()) {
+                return true;
+            }
+        }
+    }
+    recStack.erase(currentStation);
+    return false;
+}
+
+bool hasCycle(const std::unordered_map<int, Pipe>& pipes) {
+    std::unordered_set<int> visited;
+    std::unordered_set<int> recStack;
+    for (const auto& pipe : pipes) {
+        int stationId = pipe.second.inputStationId;
+        if (visited.find(stationId) == visited.end()) {
+            if (hasCycleDFS(stationId, pipes, visited, recStack)) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+void topologicalSort(const std::unordered_map<int, Pipe>& pipes, const std::unordered_map<int, CompressorStation>& stations) {
+    if (hasCycle(pipes)) {
+        std::cout << "Graph contains a cycle. Topological sort is not possible." << std::endl;
+        return;
+    }
+    std::unordered_map<int, int> inDegree;
+    std::queue<int> q;
+    std::vector<int> topologicalOrder;
+    for (const auto& pipe : pipes) {
+        int stationId = pipe.second.outputStationId;
+        inDegree[stationId]++;
+    }
+    for (const auto& station : stations) {
+        int stationId = station.first;
+        if (inDegree.find(stationId) == inDegree.end()) {
+            inDegree[stationId] = 0;
+            q.push(stationId);
+        }
+    }
+    std::cout << "Graph:" << std::endl;
+    for (const auto& pipe : pipes) {
+        if (pipe.second.isConnected()) {
+            std::cout << pipe.second.inputStationId << " -> " << pipe.second.outputStationId << std::endl;
+        }
+    }
+    std::cout << "Topological Sort:" << std::endl;
+    while (!q.empty()) {
+        int currentStation = q.front();
+        topologicalOrder.push_back(currentStation);
+        q.pop();
+        std::cout << currentStation << " ";
+
+        for (const auto& pipe : pipes) {
+            if (pipe.second.inputStationId == currentStation) {
+                int nextStation = pipe.second.outputStationId;
+                inDegree[nextStation]--;
+
+                if (inDegree[nextStation] == 0) {
+                    q.push(nextStation);
+                }
+            }
+        }
+    }
+    std::cout << std::endl;
+
+    while (true) {
+        std::cout << std::endl;
+        cout << "1. Show stations in sorted order" << endl;
+        cout << "0. Back to main menu" << endl;
+        int userChoice;
+        if (!(cin >> userChoice)) {
+            cout << "Invalid choice. Please try again." << endl;
+            logInput(to_string(userChoice));
+            clearInput();
+            continue;
+        }
+        logInput(to_string(userChoice));
+        std::cout << std::endl;
+
+        switch (userChoice) {
+        case 1: {
+            for (int station_id : topologicalOrder) {
+                for (const auto& stationEntry : stations) {
+                    const CompressorStation& station = stationEntry.second;
+                    if (station.getId() == station_id) {
+                        station.displayData();
+                        std::cout << std::endl;
+                    }
+                }
+            }
+            std::cout << std::endl;
+            break;
+        }
+        case 0: {
+            return;
+        }
+        default: {
+            cout << "" << endl;
+            cout << "Invalid choice. Please try again." << endl;
             break;
         }
         }
