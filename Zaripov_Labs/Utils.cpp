@@ -834,7 +834,7 @@ void deleteObject(unordered_map<int, Pipe>& pipes, unordered_map<int, Compressor
         cin.ignore(numeric_limits<streamsize>::max(), '\n');
         while (true) {
             cout << "" << endl;
-            showPipes(pipes);
+            showPipes(filteredPipes);
             if (pipes.size() < 1) {
                 break;
             }
