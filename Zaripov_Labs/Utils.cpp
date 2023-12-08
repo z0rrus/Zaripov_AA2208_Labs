@@ -1346,26 +1346,38 @@ void topologicalSort(const std::unordered_map<int, Pipe>& pipes, const std::unor
         std::cout << "Graph contains a cycle. Topological sort is not possible." << std::endl;
         return;
     }
+
     std::unordered_map<int, int> inDegree;
     std::queue<int> q;
     std::vector<int> topologicalOrder;
-    for (const auto& pipe : pipes) {
-        int stationId = pipe.second.outputStationId;
-        inDegree[stationId]++;
-    }
+
+    // Initialize inDegree for all stations
     for (const auto& station : stations) {
-        int stationId = station.first;
-        if (inDegree.find(stationId) == inDegree.end()) {
-            inDegree[stationId] = 0;
-            q.push(stationId);
+        inDegree[station.first] = 0;
+    }
+
+    // Update inDegree based on input pipes
+    for (const auto& pipe : pipes) {
+        if (pipe.second.isConnected()) {
+            int outputStationId = pipe.second.outputStationId;
+            inDegree[outputStationId]++;
         }
     }
+
+    // Add stations with inDegree 0 to the queue
+    for (const auto& entry : inDegree) {
+        if (entry.second == 0) {
+            q.push(entry.first);
+        }
+    }
+
     std::cout << "Graph:" << std::endl;
     for (const auto& pipe : pipes) {
         if (pipe.second.isConnected()) {
             std::cout << pipe.second.inputStationId << " -> " << pipe.second.outputStationId << std::endl;
         }
     }
+
     std::cout << "Topological Sort:" << std::endl;
     while (!q.empty()) {
         int currentStation = q.front();
@@ -1384,6 +1396,7 @@ void topologicalSort(const std::unordered_map<int, Pipe>& pipes, const std::unor
             }
         }
     }
+
     std::cout << std::endl;
 
     while (true) {
