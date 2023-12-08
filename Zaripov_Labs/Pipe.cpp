@@ -112,3 +112,11 @@ void Pipe::toggleRepairStatus() {
 bool Pipe::isConnected() const {
     return inputStationId != 0 && outputStationId != 0;
 }
+bool Pipe::isConnected(int stId) const {
+    return inputStationId != stId || outputStationId != stId;
+}
+
+void Pipe::disconnect()
+{
+    inputStationId = outputStationId = 0;
+}

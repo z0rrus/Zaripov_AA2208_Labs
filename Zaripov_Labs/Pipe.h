@@ -36,6 +36,8 @@ public:
     void setRepairStatus(bool inRepairStatus);
     void toggleRepairStatus();
     bool isConnected() const;
+    bool isConnected(int stId) const;
+    void disconnect();
 };
 
 #endif // PIPE_H

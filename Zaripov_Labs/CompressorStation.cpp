@@ -112,8 +112,8 @@ void CompressorStation::displayData() const {
     }
     cout << "Efficiency rating: " << efficiency << endl;
     cout << "Non-operational workshops: " << nonOperationalPercentage << "%" << endl;
-    cout << "   Pipes connected to input: " << pipesConnectedToInput << endl;
-    cout << "   Pipes connected to output: " << pipesConnectedToOutput << endl;
+   // cout << "   Pipes connected to input: " << pipesConnectedToInput << endl;
+    //cout << "   Pipes connected to output: " << pipesConnectedToOutput << endl;
 }
 
 

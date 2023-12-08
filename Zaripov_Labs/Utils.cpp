@@ -35,7 +35,7 @@ void logInput(const string& input) {
 }
 
 void decreaseConnectedToInput(std::unordered_map<int, Pipe>& pipes, std::unordered_map<int, CompressorStation>& stations, int pipeId) {
-    auto pipeIt = pipes.find(pipeId);
+/*    auto pipeIt = pipes.find(pipeId);
     if (pipeIt != pipes.end()) {
         Pipe& pipe = pipeIt->second;
         int outputStationId = pipe.outputStationId;
@@ -50,7 +50,7 @@ void decreaseConnectedToInput(std::unordered_map<int, Pipe>& pipes, std::unorder
             CompressorStation& inputStation = stationIt2->second;
             inputStation.pipesConnectedToOutput = inputStation.pipesConnectedToOutput - 1;
         }
-    }
+    }*/
 }
 
 
@@ -559,8 +559,8 @@ void saveStation(const CompressorStation& station, ofstream& file) {
     }
     file << station.getEfficiency() << "\n";
     file << station.getNonOperationalPercentage() << "\n";
-    file << station.pipesConnectedToInput<< "\n";
-    file << station.pipesConnectedToOutput << "\n";
+   // file << station.pipesConnectedToInput<< "\n";
+    //file << station.pipesConnectedToOutput << "\n";
 }
 
 
@@ -672,10 +672,10 @@ void loadStation(ifstream& file, unordered_map<int, CompressorStation>& stations
     file >> nonOperationalPercentage;
     station.setEfficiency(efficiency);
     station.setNonOperationalPercentage(nonOperationalPercentage);
-    file >> pipesConnectedToInput;
-    file >> pipesConnectedToOutput;
-    station.pipesConnectedToInput = pipesConnectedToInput;
-    station.pipesConnectedToOutput = pipesConnectedToOutput;
+    int x;
+    file >> x;
+    file >> x;
+
     stations.emplace(id, station);
     calculateMaxStationsId(stations);
 }
@@ -774,8 +774,21 @@ void deletePipes(std::unordered_map<int, Pipe>& pipes, std::unordered_map<int, C
 
 void deleteStations(std::unordered_map<int, CompressorStation>& stations, std::unordered_map<int, Pipe>& pipes,
     const std::unordered_map<int, bool>& stationIds) {
-    std::unordered_map<int, bool> modifiedStationIds;
+    for (auto& [id, trash] : stationIds)
+    {
+        for (auto& [pid, p] : pipes)
+        {   
+            if (p.isConnected(id))
+            {
+                //!!!!!!!!!!!!!!!! user-friendly
+                p.disconnect();
 
+            }
+        }
+        stations.erase(id);
+    }
+    return;
+    std::unordered_map<int, bool> modifiedStationIds;
     for (auto it = stations.begin(); it != stations.end();) {
         int station_id = it->second.getId();
         if (stationIds.find(station_id) != stationIds.end()) {
@@ -1034,14 +1047,33 @@ void connectStationsAndUpdatePipe(std::unordered_map<int, Pipe>& pipes, Compress
     Pipe& pipe = pipes[pipeId];
     pipe.inputStationId = inputStation.getId();
     pipe.outputStationId = outputStation.getId();
-    inputStation.pipesConnectedToOutput++;
-    outputStation.pipesConnectedToInput++;
+    //inputStation.pipesConnectedToOutput++;
+    //outputStation.pipesConnectedToInput++;
     std::cout << "Stations successfully connected." << std::endl;
 }
+std::unordered_set<int> AvailableStations(std::unordered_map<int, Pipe>& pipes, std::unordered_map<int, CompressorStation>& stations)
+{
+    std::unordered_map<int, int> ins;
+    std::unordered_map<int, int> outs;
 
+    for (auto& [id, p] : pipes)
+    {
+        outs[p.inputStationId]++;
+        ins[p.outputStationId]++;
+    }
+    //0!!!
 
+    std::unordered_set<int> res;
+    for (auto& [id, s] : stations)
+    {
+        int n = s.getWorkshopCount();
+        if (ins[id] < n || outs[id] < n)
+            res.insert(id);
+    }
+    return res;
+
+}
 void connectPipeToStations(std::unordered_map<int, Pipe>& pipes, std::unordered_map<int, CompressorStation>& stations) {
-    int inputStationId, outputStationId, pipeId, userDiameter;
 
     showStations(stations);
     if (stations.size() < 2) {
@@ -1049,50 +1081,54 @@ void connectPipeToStations(std::unordered_map<int, Pipe>& pipes, std::unordered_
         return;
     }
 
-    bool foundSuitableStations = false;
-
-    for (auto outputStationIt = stations.begin(); outputStationIt != stations.end(); ++outputStationIt) {
-        for (auto inputStationIt = stations.begin(); inputStationIt != stations.end(); ++inputStationIt) {
-            if (outputStationIt->first != inputStationIt->first) {
-                if (outputStationIt->second.pipesConnectedToOutput < outputStationIt->second.workshopCount) {
-                    if (inputStationIt->second.pipesConnectedToInput < inputStationIt->second.workshopCount) {
-                        foundSuitableStations = true;
-                    }
-                }
-            }
-        }
-    }
-    if (!foundSuitableStations) {
+    auto FreeCS = AvailableStations(pipes, stations);
+    if (FreeCS.size() == 0) {
         std::cout << "No suitable pair of stations found." << std::endl;
         return;
     }
+    std::unordered_map<int, int> ins;
+    std::unordered_map<int, int> outs;
 
-    do {
+    for (auto& [id, p] : pipes)
+    {
+        outs[p.inputStationId]++;
+        ins[p.outputStationId]++;
+    }
+    while (1)
+    {
+        int inputStationId, outputStationId, pipeId, userDiameter;
+
         std::cout << "Enter the ID of the input station: ";
         clearInput();
-        std::cin >> inputStationId;
+        std::cin >> inputStationId;//!!!!!!!!!!!!!!!!!
         logInput(to_string(inputStationId));
-        auto inputStationIt = stations.find(inputStationId);
-        if (inputStationIt == stations.end()) {
-            std::cout << "Station with the specified ID not found." << std::endl;
-        }
-        else if (inputStationIt->second.pipesConnectedToOutput >= inputStationIt->second.workshopCount) {
-            std::cout << "Number of pipes connected to Output exceeds or equals workshop count. Please choose another station." << std::endl;
-        }
-        else {
-            bool atLeastOneStationAvailable = std::any_of(stations.begin(), stations.end(), [inputStationId](const auto& pair) {
-                return pair.first != inputStationId &&
-                    pair.second.pipesConnectedToInput < pair.second.workshopCount;
-                });
-
-            if (atLeastOneStationAvailable) {
+        if (stations.contains(inputStationId))
+        {
+            if (stations[inputStationId].getWorkshopCount() > outs[inputStationId])
+            {
                 break;
             }
-            else {
-                std::cout << "No other suitable station available. Please choose a different input station first." << std::endl;
-            }
+            else
+                std::cout << "Number of pipes connected to Output exceeds or equals workshop count. Please choose another station." << std::endl;
         }
-    } while (true);
+        else
+            std::cout << "Station with the specified ID not found." << std::endl;
+    }
+
+    //else {
+    //    bool atLeastOneStationAvailable = std::any_of(stations.begin(), stations.end(), [inputStationId](const auto& pair) {
+    //        return pair.first != inputStationId &&
+    //            pair.second.pipesConnectedToInput < pair.second.workshopCount;
+    //        });
+
+    //    if (atLeastOneStationAvailable) {
+    //        break;
+    //    }
+    //    else {
+    //        std::cout << "No other suitable station available. Please choose a different input station first." << std::endl;
+    //    }
+    //}
+
 
 
 
@@ -1347,12 +1383,18 @@ void topologicalSort(const std::unordered_map<int, Pipe>& pipes, const std::unor
         return;
     }
     std::unordered_map<int, int> inDegree;
-    std::queue<int> q;
+    std::unordered_set<int> v;
     std::vector<int> topologicalOrder;
-    for (const auto& pipe : pipes) {
-        int stationId = pipe.second.outputStationId;
-        inDegree[stationId]++;
+    for (const auto& [id, pipe] : pipes) {
+        if (pipe.outputStationId != 0) {
+            int stationId = pipe.outputStationId;
+            inDegree[stationId]++;
+            v.insert(pipe.inputStationId);
+            v.insert(pipe.outputStationId);
+        }
     }
+
+    std::queue<int> q;
     for (const auto& station : stations) {
         int stationId = station.first;
         if (inDegree.find(stationId) == inDegree.end()) {

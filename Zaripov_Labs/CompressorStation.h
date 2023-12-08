@@ -21,8 +21,8 @@ public:
     int workshopCount;
     std::vector<bool> workshopStatus;
     static int getMaxId();
-    int pipesConnectedToInput; 
-    int pipesConnectedToOutput;
+    //int pipesConnectedToInput; 
+    //int pipesConnectedToOutput;
     CompressorStation();
     int getId() const;
     std::string getName() const;
